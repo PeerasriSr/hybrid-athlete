@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#e9edf3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0c1014" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hybrid">
+<meta name="description" content="ตารางเทรน Hybrid Athlete 8 สัปดาห์ ติ๊กเช็คได้ พร้อมวิธีทำแต่ละท่าและตัวจับเวลาพัก">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%8B%3C/text%3E%3C/svg%3E">
+<title>Hybrid Athlete — 8 สัปดาห์</title>
+<style>
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+  img, svg { max-width: 100%; }
+
+  .theme-btn {
+    font-family: var(--mono);
+    font-size: .75rem;
+    padding: .25rem .5rem;
+    margin-left: .5rem;
+    border: 1px solid var(--line);
+    border-radius: .375rem;
+    background: var(--surface);
+    color: var(--dim);
+    cursor: pointer;
+    line-height: 1.4;
+  }
+  .theme-btn:hover { color: var(--text); border-color: var(--faint); }
+  .theme-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<style>
+  :root {
+    --bg: #e9edf3;
+    --surface: #ffffff;
+    --surface-2: #f3f6fa;
+    --line: #d3dae5;
+    --line-soft: #e3e9f1;
+    --text: #121722;
+    --dim: #59647a;
+    --faint: #8b96a8;
+    --accent: #2447e0;
+    --accent-soft: #dfe5ff;
+    --on-accent: #ffffff;
+    --run: #0d7358;
+    --run-soft: #d6efe6;
+    --warn: #9a670a;
+    --warn-soft: #f7ebd2;
+    --shadow: 0 1px 2px rgba(18, 23, 34, .06), 0 8px 24px -16px rgba(18, 23, 34, .3);
+
+    --sans: "Segoe UI Variable Text", "Segoe UI", "Noto Sans Thai", "Thonburi",
+            system-ui, -apple-system, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1014;
+      --surface: #151a22;
+      --surface-2: #1b222d;
+      --line: #28313f;
+      --line-soft: #1f2733;
+      --text: #e4eaf3;
+      --dim: #8d99ac;
+      --faint: #66738a;
+      --accent: #7f9bff;
+      --accent-soft: #1d2842;
+    --on-accent: #0c1014;
+      --run: #3ecfa3;
+      --run-soft: #102c25;
+      --warn: #e0ad4d;
+      --warn-soft: #2c2415;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 8px 24px -16px rgba(0, 0, 0, .9);
+    }
+  }
+
+  :root[data-theme="light"] {
+    --bg: #e9edf3;
+    --surface: #ffffff;
+    --surface-2: #f3f6fa;
+    --line: #d3dae5;
+    --line-soft: #e3e9f1;
+    --text: #121722;
+    --dim: #59647a;
+    --faint: #8b96a8;
+    --accent: #2447e0;
+    --accent-soft: #dfe5ff;
+    --on-accent: #ffffff;
+    --run: #0d7358;
+    --run-soft: #d6efe6;
+    --warn: #9a670a;
+    --warn-soft: #f7ebd2;
+    --shadow: 0 1px 2px rgba(18, 23, 34, .06), 0 8px 24px -16px rgba(18, 23, 34, .3);
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0c1014;
+    --surface: #151a22;
+    --surface-2: #1b222d;
+    --line: #28313f;
+    --line-soft: #1f2733;
+    --text: #e4eaf3;
+    --dim: #8d99ac;
+    --faint: #66738a;
+    --accent: #7f9bff;
+    --accent-soft: #1d2842;
+    --on-accent: #0c1014;
+    --run: #3ecfa3;
+    --run-soft: #102c25;
+    --warn: #e0ad4d;
+    --warn-soft: #2c2415;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 8px 24px -16px rgba(0, 0, 0, .9);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .shell {
+    max-width: 34rem;
+    margin: 0 auto;
+    padding: 1rem 1rem calc(6.5rem + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: .875rem;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .25rem .125rem .5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .masthead h1 {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 650;
+    letter-spacing: -.01em;
+  }
+  .masthead .block {
+    font-family: var(--mono);
+    font-size: .75rem;
+    color: var(--faint);
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+
+  /* ---------- week / day picker: lane strip ---------- */
+  .picker {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: .75rem;
+    padding: .625rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: .625rem;
+  }
+
+  .weeks {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: .25rem;
+  }
+  .weeks button {
+    font-family: var(--mono);
+    font-size: .75rem;
+    padding: .375rem 0;
+    border: 1px solid transparent;
+    border-radius: .375rem;
+    background: var(--surface-2);
+    color: var(--dim);
+    cursor: pointer;
+    transition: background .12s, color .12s;
+  }
+  .weeks button[data-deload="1"] { color: var(--warn); }
+  .weeks button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+  }
+
+  .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: .25rem;
+  }
+  .days button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .3125rem;
+    padding: .4375rem 0 .5rem;
+    border: 1px solid var(--line-soft);
+    border-radius: .5rem;
+    background: var(--surface-2);
+    color: var(--dim);
+    font-family: var(--sans);
+    font-size: .8125rem;
+    cursor: pointer;
+    position: relative;
+  }
+  .days button[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+    font-weight: 600;
+  }
+  .days button[data-today="1"]::after {
+    content: "";
+    position: absolute;
+    top: .3125rem;
+    right: .3125rem;
+    width: .3125rem;
+    height: .3125rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  /* lane bar = how much of that day is ticked */
+  .lane {
+    width: 1.375rem;
+    height: .25rem;
+    border-radius: 1rem;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .lane i {
+    display: block;
+    height: 100%;
+    border-radius: 1rem;
+    background: var(--accent);
+    transition: width .2s ease;
+  }
+  .days button[data-kind="run"] .lane i { background: var(--run); }
+  .days button[data-kind="rest"] .lane i { background: var(--faint); }
+
+  /* ---------- session card ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: .75rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card > header {
+    padding: .875rem 1rem .8125rem;
+    border-bottom: 1px solid var(--line-soft);
+    display: flex;
+    flex-direction: column;
+    gap: .375rem;
+  }
+  .kicker {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .chip {
+    padding: .1875rem .4375rem;
+    border-radius: .3125rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: .05em;
+  }
+  .chip[data-kind="run"] { background: var(--run-soft); color: var(--run); }
+  .chip[data-kind="rest"] { background: var(--surface-2); color: var(--dim); }
+  .card > header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 650;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+  }
+  .subline {
+    font-size: .8125rem;
+    color: var(--dim);
+  }
+
+  .banner {
+    margin: 0;
+    padding: .625rem 1rem;
+    background: var(--warn-soft);
+    color: var(--warn);
+    font-size: .8125rem;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .banner strong { font-weight: 650; }
+
+  .group-label {
+    padding: .75rem 1rem .25rem;
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  ol.items { list-style: none; margin: 0; padding: 0; }
+
+  li.item {
+    display: grid;
+    grid-template-columns: 1.75rem 1fr;
+    gap: .625rem;
+    padding: .6875rem 1rem .6875rem .8125rem;
+    border-top: 1px solid var(--line-soft);
+    align-items: start;
+  }
+  li.item:first-child { border-top: none; }
+
+  .tick {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: .0625rem 0 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1.5px solid var(--line);
+    border-radius: .4375rem;
+    background: var(--surface-2);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex: none;
+    transition: background .12s, border-color .12s;
+  }
+  .tick::after {
+    content: "";
+    width: .5rem;
+    height: .875rem;
+    border: solid transparent;
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(42deg) translateY(-.0625rem);
+  }
+  .tick:checked { background: var(--accent); border-color: var(--accent); }
+  .tick:checked::after { border-color: var(--surface); }
+  .tick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .body { display: flex; flex-direction: column; gap: .3125rem; min-width: 0; }
+
+  .name {
+    font-size: .9375rem;
+    font-weight: 550;
+    line-height: 1.35;
+  }
+  li.item.done .name { color: var(--faint); }
+  li.item.done div.name { text-decoration: line-through; }
+  li.item.done .name-btn > span:first-child { text-decoration: line-through; }
+
+  button.name-btn {
+    font-family: inherit;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  button.name-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: .25rem; }
+  .chev {
+    flex: none;
+    font-size: 1.125rem;
+    line-height: 1;
+    color: var(--faint);
+    transform: rotate(90deg);
+    transition: transform .15s ease, color .12s;
+  }
+  button.name-btn:hover .chev { color: var(--accent); }
+  button.name-btn[aria-expanded="true"] .chev { transform: rotate(270deg); color: var(--accent); }
+
+  .how {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .5rem;
+    margin-top: .0625rem;
+    padding: .625rem .75rem .6875rem;
+    border-left: 2px solid var(--accent);
+    border-radius: 0 .375rem .375rem 0;
+    background: var(--surface-2);
+  }
+  .how ul {
+    margin: 0;
+    padding-left: 1.0625rem;
+    display: flex;
+    flex-direction: column;
+    gap: .3125rem;
+    font-size: .8125rem;
+    line-height: 1.5;
+    color: var(--dim);
+  }
+  .how li::marker { color: var(--accent); }
+  .how .video {
+    font-family: var(--mono);
+    font-size: .75rem;
+    padding: .3125rem .5rem;
+    border: 1px solid var(--line);
+    border-radius: .375rem;
+    background: var(--surface);
+    color: var(--accent);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .how .video:hover { border-color: var(--accent); }
+  .how .video:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .spec {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .375rem;
+    font-family: var(--mono);
+    font-size: .75rem;
+    color: var(--dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .rest-btn {
+    font: inherit;
+    padding: .125rem .375rem;
+    border: 1px solid var(--line);
+    border-radius: .3125rem;
+    background: var(--surface-2);
+    color: var(--dim);
+    cursor: pointer;
+  }
+  .rest-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .rest-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .note {
+    font-size: .8125rem;
+    color: var(--dim);
+    line-height: 1.45;
+  }
+
+  input.log {
+    font-family: var(--mono);
+    font-size: .8125rem;
+    padding: .3125rem .5rem;
+    width: 100%;
+    max-width: 13rem;
+    border: 1px solid var(--line);
+    border-radius: .375rem;
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  input.log::placeholder { color: var(--faint); }
+  input.log:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+
+  .card > footer {
+    padding: .75rem 1rem .875rem;
+    border-top: 1px solid var(--line-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface-2);
+  }
+  .footnote { font-size: .75rem; color: var(--faint); line-height: 1.4; }
+  .reset {
+    font: inherit;
+    font-size: .8125rem;
+    padding: .375rem .625rem;
+    border: 1px solid var(--line);
+    border-radius: .4375rem;
+    background: var(--surface);
+    color: var(--dim);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .reset:hover { color: var(--text); border-color: var(--faint); }
+
+  /* ---------- sticky status bar ---------- */
+  .statusbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 10;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: .625rem 1rem calc(.625rem + env(safe-area-inset-bottom));
+  }
+  .statusbar .inner {
+    max-width: 34rem;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: .875rem;
+  }
+  .meter { flex: 1; display: flex; flex-direction: column; gap: .3125rem; min-width: 0; }
+  .meter .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: .75rem;
+    color: var(--dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .track { height: .375rem; border-radius: 1rem; background: var(--line); overflow: hidden; }
+  .track i { display: block; height: 100%; width: 0; border-radius: 1rem; background: var(--accent); transition: width .25s ease; }
+
+  .timer {
+    font-family: var(--mono);
+    font-size: 1.125rem;
+    font-variant-numeric: tabular-nums;
+    min-width: 5.5rem;
+    padding: .5rem .625rem;
+    border: 1px solid var(--line);
+    border-radius: .5rem;
+    background: var(--surface-2);
+    color: var(--dim);
+    cursor: pointer;
+    text-align: center;
+    letter-spacing: .02em;
+  }
+  .timer[data-running="1"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .timer[data-done="1"] { border-color: var(--run); color: var(--run); background: var(--run-soft); }
+  .timer:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="shell">
+  <div class="masthead">
+    <h1>Hybrid Athlete</h1>
+    <span class="block" id="blockLabel">8 สัปดาห์ · 10 ส.ค. – 4 ต.ค.</span>
+  </div>
+
+  <nav class="picker" aria-label="เลือกวัน">
+    <div class="weeks" id="weeks" role="group" aria-label="สัปดาห์"></div>
+    <div class="days" id="days" role="group" aria-label="วันในสัปดาห์"></div>
+  </nav>
+
+  <article class="card">
+    <header>
+      <div class="kicker">
+        <span class="chip" id="chip">ยก</span>
+        <span id="dateLabel"></span>
+      </div>
+      <h2 id="title"></h2>
+      <div class="subline" id="subline"></div>
+    </header>
+    <p class="banner" id="banner" hidden></p>
+    <div id="content"></div>
+    <footer>
+      <span class="footnote" id="footnote"></span>
+      <button class="reset" id="reset" type="button">ล้างวันนี้</button>
+    </footer>
+  </article>
+</div>
+
+<div class="statusbar">
+  <div class="inner">
+    <div class="meter">
+      <div class="row"><span id="progressText">0 / 0</span><span id="weekText"></span></div>
+      <div class="track"><i id="bar"></i></div>
+    </div>
+    <button class="timer" id="timer" type="button" title="แตะเลข พัก เพื่อเริ่มจับเวลา">--:--</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
+  var DELOAD = { 4: true, 8: true };
+  var KEY = "hybrid26.v1";
+
+  // interval / tempo(นาที) / long run(กม.) ต่อสัปดาห์
+  var RUN = [
+    ["5 × 400 ม. (จ็อกพัก 90 วิ)", 15, 8],
+    ["6 × 400 ม. (จ็อกพัก 90 วิ)", 18, 9],
+    ["5 × 800 ม. (จ็อกพัก 2 นาที)", 22, 10],
+    ["4 × 400 ม. (จ็อกพัก 2 นาที)", 12, 7],
+    ["6 × 800 ม. (จ็อกพัก 2 นาที)", 22, 11],
+    ["8 × 400 ม. (จ็อกพัก 90 วิ)", 25, 12],
+    ["5 × 1000 ม. (จ็อกพัก 2:30)", 28, 13],
+    ["4 × 400 ม. (จ็อกพัก 2 นาที)", 12, null]
+  ];
+
+  var CORE = {
+    A: ["CORE A · ANTI-EXTENSION", [
+      { n: "Hollow Hold", s: "3 × 30-40 วิ", q: "hollow body hold form",
+        c: ["หลังล่างต้องแนบพื้นตลอดเวลา ถ้าลอยเมื่อไหร่คือจบเซต",
+            "แขนขาเหยียด ยิ่งเหยียดต่ำยิ่งหนัก",
+            "มือใหม่ให้งอเข่าเข้ามาก่อน ค่อยๆ เหยียดออกในสัปดาห์ถัดไป"] },
+      { n: "Pallof Press", s: "3 × 12 ต่อข้าง", q: "pallof press anti rotation form",
+        c: ["ยืนหันข้างให้เคเบิล/ยาง ดันมือออกตรงหน้าอก",
+            "หน้าที่คือ 'ห้ามลำตัวบิด' ไม่ใช่การดัน",
+            "เกร็งก้นไว้ ช่วยล็อกสะโพกไม่ให้หมุน"] },
+      { n: "Hanging Knee Raise", s: "3 × 10-12", q: "hanging knee raise form",
+        c: ["ห้อยตัวให้นิ่งก่อน ห้ามแกว่งเอาแรงเหวี่ยง",
+            "ยกเข่าขึ้นเหนือสะโพก แล้วม้วนก้นขึ้นนิดหนึ่งท้ายจังหวะ",
+            "ลงช้า 2 วิ นั่นคือส่วนที่ได้ผลจริง"] }
+    ]],
+    B: ["CORE B · LOADED", [
+      { n: "Ab Wheel / Long-lever Plank", s: "3 × 8-12", q: "ab wheel rollout form beginner",
+        c: ["เริ่มท่าคุกเข่า เก็บก้นเข้า (posterior tilt)",
+            "หลังห้ามแอ่นเด็ดขาด ออกไปเท่าที่ยังคุมหลังได้",
+            "ถ้าไม่มีล้อ ใช้ Long-lever Plank แทน (ศอกวางไปข้างหน้าไกลกว่าปกติ)"] },
+      { n: "Russian Twist ถือแผ่นน้ำหนัก", s: "3 × 12 ต่อข้าง", q: "weighted russian twist proper form",
+        c: ["หมุนจากลำตัว ไม่ใช่แกว่งแขนไปมา",
+            "ยกเท้าลอยถ้าไหว หลังตรงเอนประมาณ 45°",
+            "ช้าและคุม ดีกว่าเร็วเยอะๆ"] },
+      { n: "Side Plank", s: "3 × 30-45 วิ", q: "side plank form",
+        c: ["ศอกอยู่ใต้ไหล่พอดี",
+            "ยกสะโพกจนหัว-สะโพก-ส้นเท้าเป็นเส้นตรง",
+            "สะโพกตกเมื่อไหร่ = จบเซต อย่าฝืนนับต่อ"] }
+    ]],
+    C: ["CORE C · CARRY / POSTERIOR", [
+      { n: "Suitcase Carry", s: "3 × 30-40 ม. ต่อข้าง", q: "suitcase carry form",
+        c: ["ถือน้ำหนักข้างเดียว เดินช้าๆ",
+            "ไหล่ต้องเท่ากัน ห้ามเอียงตามน้ำหนัก — นี่คือทั้งหมดของท่านี้",
+            "หนักพอที่ 30 ม. สุดท้ายจะเริ่มเอียง"] },
+      { n: "Back Extension", s: "3 × 12-15", q: "45 degree back extension form",
+        c: ["ก้มจากสะโพก หลังตรงตลอด ไม่ใช่ก้มหลัง",
+            "ขึ้นแค่ลำตัวขนานพื้น อย่าแอ่นเกิน",
+            "บีบก้นค้าง 1 วิ ด้านบน"] },
+      { n: "Bird-dog", s: "3 × 10 ต่อข้าง", q: "bird dog exercise form",
+        c: ["เหยียดแขนกับขาฝั่งตรงข้ามพร้อมกัน",
+            "สะโพกห้ามบิด — นึกภาพวางแก้วน้ำบนหลังไว้",
+            "ค้าง 2 วิ ทุกครั้ง"] }
+    ]]
+  };
+
+  function lift(list) { return list.map(function (x) { x.log = true; return x; }); }
+
+  var UPPER_A = lift([
+    { n: "Pull-up (ถ่วงน้ำหนักถ้าไหว)", s: "5 × 4-6 · RPE 8", r: 150, q: "weighted pull up proper form",
+      c: ["จับกว้างกว่าไหล่นิดหน่อย ห้อยจนแขนเหยียดสุดทุกครั้ง",
+          "ดึงศอกลงหาสีข้าง ดันอกขึ้นหาบาร์ อย่าดึงด้วยแขนอย่างเดียว",
+          "ลงช้า 2 วิ ห้ามปล่อยตัวตกฟรี",
+          "ยังไม่ถึง 5 ครั้ง? ใช้ยางช่วย หรือทำ Negative (กระโดดขึ้นแล้วลงช้า 5 วิ)"] },
+    { n: "DB Bench Press", s: "4 × 6-8 · RPE 8", r: 150, q: "dumbbell bench press proper form",
+      c: ["บีบสะบักล็อกกับเบาะ เท้ายันพื้นแน่น",
+          "ศอกทำมุมประมาณ 45° กับลำตัว ไม่กาง 90°",
+          "ลงจนดัมเบลอยู่ระดับอก รู้สึกตึงอก แล้วค่อยดัน",
+          "ด้านบนอย่าให้ดัมเบลชนกัน จะเสียแรงตึงที่อก"] },
+    { n: "Barbell Row", s: "4 × 6-8 · RPE 8", r: 120, q: "barbell bent over row form",
+      c: ["ก้มลำตัวประมาณ 45° หลังตรง เกร็งแกนกลางไว้",
+          "ดึงบาร์เข้าหาสะดือ/ท้องน้อย ศอกชิดลำตัว",
+          "บีบสะบักค้างครึ่งวิที่ด้านบน",
+          "ห้ามโยกลำตัวช่วย ถ้าโยก = หนักเกิน"] },
+    { n: "DB Overhead Press", s: "3 × 8-10 · RPE 8", r: 90, q: "standing dumbbell shoulder press form",
+      c: ["เกร็งก้น + เกร็งท้อง อย่าแอ่นหลังส่ง",
+          "ดันขึ้นตรงๆ ให้ดัมเบลจบเหนือหัวไหล่พอดี",
+          "ลงจนถึงระดับคาง/ไหปลาร้า"] },
+    { n: "DB Lateral Raise", s: "3 × 12-15 · RPE 9", r: 60, q: "dumbbell lateral raise form",
+      c: ["ศอกงอเล็กน้อยค้างไว้ตลอด",
+          "นำด้วยศอก ไม่ใช่มือ — เหมือนเทน้ำจากเหยือก",
+          "ยกแค่ระดับไหล่พอ สูงกว่านั้นบ่าเข้ามาทำแทน",
+          "ลงช้า อย่าเหวี่ยง น้ำหนักเบาก็ได้ผล"] },
+    { n: "Face Pull / Band Pull-apart", s: "3 × 15-20 · RPE 8", r: 45, q: "face pull rear delt form",
+      c: ["ดึงเชือกเข้าหาหน้าผาก ศอกสูงระดับไหล่",
+          "ท้ายจังหวะหมุนฝ่ามือออกด้านนอก บีบสะบัก",
+          "น้ำหนักเบา เน้นคุม — ท่านี้มีไว้ถ่วงดุลวันดันเยอะ"] }
+  ]);
+
+  var LOWER_A = lift([
+    { n: "Barbell Back Squat", s: "5 × 4-6 · RPE 8", r: 180, q: "barbell back squat proper form",
+      c: ["บาร์วางบนกล้ามหลังไหล่ (ไม่ใช่กระดูกคอ) เท้ากว้างเท่าไหล่ ปลายเท้าเฉียงออก 15-30°",
+          "หายใจเข้าลึกค้างไว้ เกร็งท้องเหมือนจะโดนต่อย แล้วค่อยลง",
+          "ลงจนต้นขาขนานพื้นเป็นอย่างน้อย เข่าไปตามแนวปลายเท้า",
+          "ดันพื้นออกด้วยเท้าเต็มฝ่า อย่าให้สะโพกพุ่งขึ้นก่อนอก"] },
+    { n: "Romanian Deadlift", s: "3 × 6-8 · RPE 8", r: 150, q: "romanian deadlift RDL form",
+      c: ["เข่างอเล็กน้อยแล้วค้างไว้ — ไม่ใช่ท่าย่อเข่า",
+          "ดันสะโพกไปข้างหลังให้ไกลที่สุด บาร์ไถชิดขาตลอด",
+          "ลงจนรู้สึกตึงหลังต้นขา (ประมาณกลางหน้าแข้ง) หลังห้ามค้อม",
+          "ขึ้นด้วยการดันสะโพกไปข้างหน้า ไม่ใช่แอ่นหลัง"] },
+    { n: "Bulgarian Split Squat", s: "3 × 8-10 ต่อข้าง · RPE 8", r: 90, q: "bulgarian split squat form",
+      c: ["วางหลังเท้าบนม้า ห่างประมาณ 60-70 ซม.",
+          "ลงตรงๆ ให้เข่าหลังเกือบแตะพื้น น้ำหนักลงส้นเท้าหน้า",
+          "ลำตัวเอนหน้าเล็กน้อย = เน้นก้น / ตั้งตรง = เน้นหน้าขา",
+          "ระยะเท้าถูกต้องแล้ว เข่าหน้าจะไม่เลยปลายเท้ามาก"] },
+    { n: "Nordic Curl / Leg Curl", s: "3 × 8-12 · RPE 8", r: 90, q: "nordic hamstring curl progression",
+      c: ["ล็อกข้อเท้าไว้ ลำตัวตรงเป็นเส้นเดียวกับต้นขา เกร็งก้น",
+          "ลงช้าที่สุดเท่าที่คุมได้ แล้วใช้มือดันพื้นช่วยขึ้น",
+          "ท่านี้กันเจ็บหลังต้นขาตอนวิ่งเร็ว อย่าข้าม",
+          "ถ้ามีเครื่อง Leg Curl ใช้แทนได้"] },
+    { n: "Standing Calf Raise (หนัก)", s: "4 × 8-12 · RPE 9", r: 75, q: "standing calf raise full range",
+      c: ["ยืดส้นเท้าลงให้สุดก่อนดันขึ้นทุกครั้ง",
+          "ขึ้นจนสุดปลายเท้า ค้าง 1 วิ",
+          "ห้ามเด้ง — ช่วงการเคลื่อนไหวเต็มสำคัญกว่าน้ำหนัก"] },
+    { n: "Toe (Tibialis) Raise", s: "3 × 15-20 · RPE 9", r: 45, q: "tibialis raise shin splint prevention",
+      c: ["ยืนพิงผนัง ส้นเท้าติดพื้น",
+          "กระดกปลายเท้าขึ้นให้สูงสุด ค้าง 1 วิ แล้วลงช้า",
+          "จะรู้สึกแสบตึงหน้าแข้ง — นั่นคือถูกแล้ว ท่านี้กันหน้าแข้งอักเสบตอนเพิ่มระยะวิ่ง"] }
+  ]);
+
+  var UPPER_B = lift([
+    { n: "Incline DB Press", s: "4 × 10-12 · RPE 8-9", r: 90, q: "incline dumbbell press form 30 degrees",
+      c: ["ปรับเบาะประมาณ 30° ชันกว่านี้ไหล่หน้าจะทำงานแทนอก",
+          "ลงจนรู้สึกตึงอกส่วนบน ศอกไม่กางเกิน 45°",
+          "วันนี้เน้นความรู้สึกกล้ามเนื้อ ไม่ต้องไล่น้ำหนัก"] },
+    { n: "Chin-up / Lat Pulldown", s: "4 × 8-12 · RPE 8-9", r: 90, q: "chin up vs pull up form",
+      c: ["Chin-up = หงายมือ กว้างเท่าไหล่ ได้ปีก+ไบเซ็ปมากกว่า Pull-up",
+          "ดึงอกเข้าหาบาร์ ศอกลงตรง",
+          "เกร็งท้อง อย่าแกว่งขา"] },
+    { n: "Seated DB OHP / Arnold Press", s: "3 × 10-12 · RPE 9", r: 75, q: "arnold press form",
+      c: ["นั่งพิงพนักตั้งชัน หลังแนบตลอด",
+          "Arnold = เริ่มหงายมือหน้าอก แล้วหมุนออกขณะดันขึ้น",
+          "ลงช้ากว่าดันขึ้นเสมอ"] },
+    { n: "Chest-supported Row", s: "3 × 12-15 · RPE 9", r: 75, q: "chest supported dumbbell row form",
+      c: ["อกแนบเบาะตลอด ห้ามยกตัวออกช่วย",
+          "ดึงศอกไปข้างหลัง บีบสะบักค้าง 1 วิ",
+          "ท่านี้ตัดการโกงออกหมด ใช้น้ำหนักน้อยกว่าที่คิดได้เลย"] },
+    { n: "Barbell Curl + Reverse Curl", s: "3 × 10-12 / 3 × 12-15 · ซูเปอร์เซ็ต", r: 60, q: "barbell curl and reverse curl form",
+      c: ["ศอกล็อกไว้ข้างลำตัว ห้ามแกว่งลำตัวส่ง",
+          "Reverse Curl = คว่ำมือ เน้นแขนท่อนปลาย น้ำหนักจะเบากว่าปกติมาก",
+          "ทำติดกันไม่พัก แล้วค่อยพัก 60 วิ"] },
+    { n: "Lateral Raise", s: "3 × 15-20 · RPE 10", r: 45, q: "dumbbell lateral raise form",
+      c: ["นำด้วยศอก ยกแค่ระดับไหล่",
+          "เซตสุดท้ายทำจนเกือบหมดแรงได้ ท่านี้ปลอดภัย",
+          "ลงช้า อย่าเหวี่ยง"] }
+  ]);
+
+  var LEG_SUPPORT = [
+    { n: "Reverse Lunge", s: "3 × 10 ต่อข้าง", log: true, q: "reverse lunge form",
+      c: ["ก้าวถอยหลัง ลำตัวตั้งตรง",
+          "เข่าหน้าอยู่เหนือส้นเท้า ไม่พุ่งไปข้างหน้า",
+          "ดันส้นเท้าหน้าเพื่อกลับขึ้น"] },
+    { n: "Single-leg RDL", s: "3 × 10 ต่อข้าง", log: true, q: "single leg romanian deadlift form",
+      c: ["ยืนขาเดียว เข่างอเล็กน้อย",
+          "ดันสะโพกไปหลัง ขาหลังยกขึ้นเป็นเส้นเดียวกับลำตัว",
+          "สะโพกห้ามบิดออกด้านข้าง — ท่านี้ฝึกความมั่นคงสะโพกเวลาวิ่ง"] },
+    { n: "Single-leg Calf Raise", s: "3 × 12-15 ต่อข้าง", log: true, q: "single leg calf raise form",
+      c: ["จับผนัง/ราวช่วยทรงตัว",
+          "เต็มช่วง ค้างบนสุด 1 วิ",
+          "เอ็นร้อยหวายแข็งแรงขึ้น = วิ่งเจ็บน้อยลง"] },
+    { n: "Hip Thrust", s: "3 × 12", log: true, q: "barbell hip thrust form",
+      c: ["สะบักพาดขอบม้า คางเก็บมองไปข้างหน้า",
+          "ดันสะโพกจนลำตัวขนานพื้น บีบก้นค้าง 1 วิ",
+          "อย่าแอ่นหลังแทนการบีบก้น"] }
+  ];
+
+  var PROGRESS_NOTE = "ทำครบ rep บนสุดของทุกเซตแล้วยัง RPE ≤ 8 → ครั้งหน้าเพิ่มน้ำหนัก 2.5-5%";
+
+  function session(week, dayIdx) {
+    var r = RUN[week - 1], ivl = r[0], tempo = r[1], longKm = r[2];
+
+    if (dayIdx === 0) return {
+      kind: "lift", title: "Upper A — Strength", sub: "ดัน/ดึงหนัก · ประมาณ 70 นาที",
+      note: PROGRESS_NOTE,
+      groups: [["", UPPER_A]]
+    };
+
+    if (dayIdx === 1) return {
+      kind: "run", title: "Interval + Core A", sub: "VO2max · ประมาณ 55 นาที",
+      note: "เร็วกว่า pace easy 60-75 วิ/กม. คุมให้ทุกเที่ยวเร็วเท่ากัน เที่ยวสุดท้ายควรยังเหลือแรงอีก 1 เที่ยว",
+      groups: [
+        ["", [
+          { n: "Warm-up", s: "10-12 นาที", d: "จ็อกเบา + A-skip / leg swing + strides 4 × 20 วิ",
+            q: "running warm up drills a skip strides",
+            c: ["จ็อกช้ามาก 8 นาทีก่อน แล้วค่อยทำ drill",
+                "A-skip: กระโดดสลับ ยกเข่าสูงระดับสะโพก ลงด้วยปลายเท้า",
+                "Strides: เร่งขึ้นจนเกือบเต็มที่ 20 วิ แล้วเดินกลับ ทำ 4 เที่ยว",
+                "อุ่นเครื่องไม่ครบแล้วซัด interval = ทางลัดสู่การบาดเจ็บ"] },
+          { n: "Main set", s: ivl, d: "หนักจริงช่วงนี้ — จับเวลาทุกเที่ยว", log: true,
+            q: "how to run 400m repeats interval training pacing",
+            c: ["เที่ยวแรกคือเที่ยวที่ 'ช้าเกินไป' เสมอ — คนส่วนใหญ่ออกเร็วเกิน",
+                "เป้าหมายคือทุกเที่ยวเวลาเท่ากัน ±2 วินาที",
+                "จบเที่ยวสุดท้ายควรรู้สึกว่ายังวิ่งต่อได้อีก 1 เที่ยว",
+                "ช่วงพักให้จ็อกเบา อย่ายืนนิ่งหรือนั่ง"] },
+          { n: "Cool-down", s: "8-10 นาที", d: "จ็อกเบามาก" }
+        ]],
+        CORE.A
+      ]
+    };
+
+    if (dayIdx === 2) return {
+      kind: "lift", title: "Lower A — Strength", sub: "สควอท/สะโพก · ประมาณ 70 นาที",
+      note: PROGRESS_NOTE,
+      groups: [["", LOWER_A]]
+    };
+
+    if (dayIdx === 3) return {
+      kind: "lift", title: "Upper B — Hypertrophy", sub: "สร้างกล้าม + แขน · ประมาณ 65 นาที",
+      note: "วันนี้เน้นจำนวนครั้งและความรู้สึกกล้ามเนื้อ ไม่ต้องไล่ล่าน้ำหนัก",
+      groups: [["", UPPER_B], CORE.B]
+    };
+
+    if (dayIdx === 4) return {
+      kind: "run", title: "Tempo " + tempo + " นาที + Leg Support", sub: "Threshold · ประมาณ 60 นาที",
+      note: "Tempo = เหนื่อยแต่คุมได้ พูดได้ทีละ 3-4 คำ ≈ เร็วกว่า easy 40-55 วิ/กม.",
+      groups: [
+        ["", [
+          { n: "Warm-up", s: "10 นาที", d: "จ็อกเบา" },
+          { n: "Tempo ต่อเนื่อง", s: tempo + " นาที", d: "ห้ามซัดจนหอบ — คุมให้จบเท่ากันทั้งช่วง", log: true,
+            q: "tempo run threshold pace how it should feel",
+            c: ["เช็คด้วยการพูด: พูดได้ทีละ 3-4 คำแล้วต้องหายใจ = ถูกจังหวะ",
+                "ถ้าพูดเป็นประโยคยาวได้ = ช้าไป / พูดไม่ออกเลย = เร็วไป",
+                "เร็วกว่า pace easy ประมาณ 40-55 วินาที/กม.",
+                "นาทีสุดท้ายควรยังคุมจังหวะได้ ไม่ใช่ทรุด"] },
+          { n: "Cool-down", s: "8 นาที", d: "จ็อกเบา" }
+        ]],
+        ["LEG SUPPORT · 20 นาที (เบา อย่าให้ล้าถึงวันเสาร์)", LEG_SUPPORT]
+      ]
+    };
+
+    if (dayIdx === 5) {
+      if (longKm === null) return {
+        kind: "run", title: "5K Time Trial", sub: "วันวัดผล — จบบล็อก 8 สัปดาห์",
+        note: "จดเวลาไว้เทียบกับตอนก่อนเริ่มโปรแกรม แล้วใช้ตั้ง pace ของบล็อกหน้า",
+        groups: [["", [
+          { n: "Warm-up", s: "15 นาที + strides 4 × 20 วิ" },
+          { n: "5 กม. เต็มที่ — จับเวลา", s: "5.0 กม.", d: "ออกอย่าเร็วเกิน 2 กม. แรกคุมไว้ก่อน", log: true },
+          { n: "Cool-down", s: "10 นาที" },
+          { n: "เทสต์เวท (จะทำวันจันทร์/พุธก็ได้)", s: "Squat 5RM · DB Bench 8RM · Pull-up สูงสุด", log: true }
+        ]]]
+      };
+      return {
+        kind: "run", title: "Long Run " + longKm + " กม.", sub: "Zone 2 · สร้างฐาน aerobic",
+        note: "Pace 6:45-7:15/กม. ต้องพูดเป็นประโยคยาวได้ตลอด ถ้าหอบ = เร็วไป ให้ช้าลง",
+        groups: [
+          ["", [
+            { n: "Long run", s: longKm + " กม. · Zone 2", d: "จิบน้ำ/เกลือแร่ถ้าเกิน 60 นาที", log: true,
+              q: "zone 2 easy long run pace how slow should it be",
+              c: ["ช้ากว่าที่รู้สึกว่า 'ควรจะ' — คนส่วนใหญ่วิ่ง easy เร็วเกินไป",
+                  "เช็ค: ต้องพูดเป็นประโยคยาวได้ตลอด หรือหายใจทางจมูกได้",
+                  "รอบขา 170-180 ก้าว/นาที ก้าวสั้นถี่ ลงเท้าใต้ลำตัว",
+                  "วันนี้คือวันสร้างฐาน ไม่ใช่วันซัด — วิ่งเร็วขึ้นไม่ได้แต้มเพิ่ม"] }
+          ]],
+          CORE.C
+        ]
+      };
+    }
+
+    return {
+      kind: "rest", title: "Rest + Mobility", sub: "วันพักจริง — นี่คือวันที่ร่างกายสร้างของ",
+      note: "โปรตีน 130-150 ก./วัน · คาร์บ 300-400 ก. ในวันวิ่งหนัก · นอน 7-8 ชม.",
+      groups: [["", [
+        { n: "เดินเบา", s: "15-20 นาที",
+          c: ["เลือดไหลเวียนช่วยฟื้นตัวเร็วกว่านอนเฉยๆ", "ไม่ต้องเร็ว ไม่ต้องจับเวลา"] },
+        { n: "ยืดสะโพกหน้า (hip flexor)", s: "2 × 45 วิ ต่อข้าง", q: "couch stretch hip flexor runners",
+          c: ["ท่าคุกเข่าข้างเดียว เก็บก้นเข้า แล้วดันสะโพกไปหน้า",
+              "สะโพกหน้าตึงจากนั่งทำงานทั้งวัน + วิ่ง = ก้นไม่ทำงาน หลังล่างรับแทน"] },
+        { n: "ยืดน่อง + เอ็นร้อยหวาย", s: "2 × 45 วิ ต่อข้าง", q: "calf and achilles stretch for runners",
+          c: ["ยืดสองแบบ: เข่าเหยียด (น่องมัดบน) และเข่างอ (น่องมัดล่าง/เอ็นร้อยหวาย)"] },
+        { n: "ข้อเท้า (ankle dorsiflexion)", s: "2 × 15 ครั้ง ต่อข้าง", q: "ankle dorsiflexion mobility knee to wall",
+          c: ["คุกเข่าหน้าผนัง ดันเข่าไปแตะผนังโดยส้นเท้าไม่ยก",
+              "ข้อเท้าไม่พอ = สควอทลงไม่ลึก และวิ่งลงเท้าผิด"] },
+        { n: "อกกลาง (thoracic rotation)", s: "2 × 10 ต่อข้าง", q: "thoracic spine rotation stretch open book",
+          c: ["ท่า Open Book: นอนตะแคง งอเข่า กางแขนบนเปิดออกไปอีกฝั่ง",
+              "ช่วยให้ยกแขนเหนือหัวได้โดยไม่แอ่นหลัง"] }
+      ]]]
+    };
+  }
+
+  // ---------- state ----------
+  var store = {};
+  try { store = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { store = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+  function rec(key) { if (!store[key]) store[key] = { done: {}, log: {} }; return store[key]; }
+
+  var DAY_NAMES = ["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"];
+  var MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+                "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+
+  function dateOf(week, dayIdx) {
+    var d = new Date(START.getTime());
+    d.setDate(d.getDate() + (week - 1) * 7 + dayIdx);
+    return d;
+  }
+  function keyOf(d) {
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function sameDay(a, b) { return keyOf(a) === keyOf(b); }
+
+  var today = new Date();
+  var cur = { week: 1, day: 0 };
+  (function locate() {
+    var diff = Math.floor((new Date(today.getFullYear(), today.getMonth(), today.getDate()) - START) / 86400000);
+    if (diff >= 0 && diff < 56) { cur.week = Math.floor(diff / 7) + 1; cur.day = diff % 7; }
+  })();
+
+  function kindOf(dayIdx) {
+    if (dayIdx === 1 || dayIdx === 4 || dayIdx === 5) return "run";
+    if (dayIdx === 6) return "rest";
+    return "lift";
+  }
+
+  // ---------- render ----------
+  var elWeeks = document.getElementById("weeks");
+  var elDays = document.getElementById("days");
+  var elContent = document.getElementById("content");
+
+  function countOf(week, dayIdx) {
+    var s = session(week, dayIdx), total = 0;
+    for (var i = 0; i < s.groups.length; i++) total += s.groups[i][1].length;
+    var r = store[keyOf(dateOf(week, dayIdx))];
+    var done = 0;
+    if (r) for (var k in r.done) if (r.done[k]) done++;
+    return { done: Math.min(done, total), total: total };
+  }
+
+  function buildWeeks() {
+    elWeeks.innerHTML = "";
+    for (var w = 1; w <= 8; w++) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = "W" + w;
+      b.setAttribute("aria-pressed", w === cur.week ? "true" : "false");
+      if (DELOAD[w]) b.setAttribute("data-deload", "1");
+      b.title = DELOAD[w] ? "สัปดาห์ " + w + " · DELOAD" : "สัปดาห์ " + w;
+      (function (n) { b.addEventListener("click", function () { cur.week = n; render(); }); })(w);
+      elWeeks.appendChild(b);
+    }
+  }
+
+  function buildDays() {
+    elDays.innerHTML = "";
+    for (var i = 0; i < 7; i++) {
+      var d = dateOf(cur.week, i);
+      var c = countOf(cur.week, i);
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-pressed", i === cur.day ? "true" : "false");
+      b.setAttribute("data-kind", kindOf(i));
+      if (sameDay(d, today)) b.setAttribute("data-today", "1");
+      b.setAttribute("aria-label", DAY_NAMES[i] + " " + d.getDate() + " " + MONTHS[d.getMonth()] +
+        " · ทำแล้ว " + c.done + " จาก " + c.total);
+      b.innerHTML = '<span>' + DAY_NAMES[i] + '</span><span class="lane"><i style="width:' +
+        (c.total ? Math.round(c.done / c.total * 100) : 0) + '%"></i></span>';
+      (function (n) { b.addEventListener("click", function () { cur.day = n; render(); }); })(i);
+      elDays.appendChild(b);
+    }
+  }
+
+  function refreshMeter() {
+    var c = countOf(cur.week, cur.day);
+    document.getElementById("progressText").textContent = c.done + " / " + c.total + " เสร็จ";
+    document.getElementById("bar").style.width = (c.total ? c.done / c.total * 100 : 0) + "%";
+    document.getElementById("weekText").textContent =
+      "W" + cur.week + (DELOAD[cur.week] ? " · DELOAD" : "");
+  }
+
+  function render() {
+    var s = session(cur.week, cur.day);
+    var d = dateOf(cur.week, cur.day);
+    var k = keyOf(d);
+    var r = rec(k);
+
+    buildWeeks();
+    buildDays();
+
+    var chip = document.getElementById("chip");
+    chip.setAttribute("data-kind", s.kind);
+    chip.textContent = s.kind === "run" ? "วิ่ง" : s.kind === "rest" ? "พัก" : "ยก";
+
+    document.getElementById("dateLabel").textContent =
+      DAY_NAMES[cur.day] + " " + d.getDate() + " " + MONTHS[d.getMonth()] +
+      (sameDay(d, today) ? " · วันนี้" : "");
+    document.getElementById("title").textContent = s.title;
+    document.getElementById("subline").textContent = s.sub + " · แตะชื่อท่าเพื่อดูวิธีทำ";
+    document.getElementById("footnote").textContent = s.note;
+
+    var banner = document.getElementById("banner");
+    if (DELOAD[cur.week] && s.kind === "lift") {
+      banner.innerHTML = "<strong>สัปดาห์ DELOAD</strong> — ทำเซตประมาณ 60% (ปัดลง) น้ำหนักเท่าเดิม หยุดที่ RPE 6-7 ห้ามดันสุด";
+      banner.hidden = false;
+    } else if (DELOAD[cur.week] && s.kind === "run") {
+      banner.innerHTML = "<strong>สัปดาห์ DELOAD</strong> — ระยะสั้นลงตั้งใจแล้ว อย่าวิ่งเพิ่มเอง";
+      banner.hidden = false;
+    } else {
+      banner.hidden = true;
+    }
+
+    elContent.innerHTML = "";
+    var idx = 0;
+    s.groups.forEach(function (g) {
+      if (g[0]) {
+        var h = document.createElement("div");
+        h.className = "group-label";
+        h.textContent = g[0];
+        elContent.appendChild(h);
+      }
+      var ol = document.createElement("ol");
+      ol.className = "items";
+      g[1].forEach(function (it) {
+        ol.appendChild(itemNode(it, idx++, r, k));
+      });
+      elContent.appendChild(ol);
+    });
+
+    refreshMeter();
+  }
+
+  function itemNode(it, i, r, k) {
+    var li = document.createElement("li");
+    li.className = "item" + (r.done[i] ? " done" : "");
+
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.className = "tick";
+    cb.checked = !!r.done[i];
+    cb.setAttribute("aria-label", it.n);
+    cb.addEventListener("change", function () {
+      r.done[i] = cb.checked;
+      li.classList.toggle("done", cb.checked);
+      save();
+      buildDays();
+      refreshMeter();
+      if (cb.checked && it.r) startTimer(it.r);
+    });
+
+    var body = document.createElement("div");
+    body.className = "body";
+
+    var how = null;
+    if (it.c || it.q) {
+      var name = document.createElement("button");
+      name.type = "button";
+      name.className = "name name-btn";
+      name.setAttribute("aria-expanded", "false");
+      name.innerHTML = '<span></span><span class="chev" aria-hidden="true">›</span>';
+      name.firstChild.textContent = it.n;
+      body.appendChild(name);
+
+      how = document.createElement("div");
+      how.className = "how";
+      how.hidden = true;
+
+      if (it.c) {
+        var ul = document.createElement("ul");
+        it.c.forEach(function (line) {
+          var li2 = document.createElement("li");
+          li2.textContent = line;
+          ul.appendChild(li2);
+        });
+        how.appendChild(ul);
+      }
+      if (it.q) {
+        var a = document.createElement("a");
+        a.className = "video";
+        a.href = "https://www.youtube.com/results?search_query=" + encodeURIComponent(it.q);
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = "▶ ดูวิดีโอสาธิต";
+        how.appendChild(a);
+      }
+
+      name.addEventListener("click", function () {
+        var open = name.getAttribute("aria-expanded") === "true";
+        name.setAttribute("aria-expanded", open ? "false" : "true");
+        how.hidden = open;
+      });
+    } else {
+      var plain = document.createElement("div");
+      plain.className = "name";
+      plain.textContent = it.n;
+      body.appendChild(plain);
+    }
+
+    if (it.s) {
+      var spec = document.createElement("div");
+      spec.className = "spec";
+      var sp = document.createElement("span");
+      sp.textContent = it.s;
+      spec.appendChild(sp);
+      if (it.r) {
+        var rb = document.createElement("button");
+        rb.type = "button";
+        rb.className = "rest-btn";
+        rb.textContent = "พัก " + fmt(it.r);
+        rb.addEventListener("click", function () { startTimer(it.r); });
+        spec.appendChild(rb);
+      }
+      body.appendChild(spec);
+    }
+
+    if (it.d) {
+      var note = document.createElement("div");
+      note.className = "note";
+      note.textContent = it.d;
+      body.appendChild(note);
+    }
+
+    if (how) body.appendChild(how);
+
+    if (it.log) {
+      var inp = document.createElement("input");
+      inp.className = "log";
+      inp.type = "text";
+      inp.value = r.log[i] || "";
+      inp.placeholder = "จดน้ำหนัก / เวลา…";
+      inp.setAttribute("aria-label", "บันทึกผล " + it.n);
+      inp.addEventListener("input", function () { r.log[i] = inp.value; save(); });
+      body.appendChild(inp);
+    }
+
+    li.appendChild(cb);
+    li.appendChild(body);
+    return li;
+  }
+
+  // ---------- rest timer ----------
+  var elTimer = document.getElementById("timer");
+  var tHandle = null, tLeft = 0;
+
+  function fmt(sec) {
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return m + ":" + ("0" + s).slice(-2);
+  }
+  function paint() {
+    elTimer.textContent = fmt(Math.max(tLeft, 0));
+  }
+  function startTimer(sec) {
+    clearInterval(tHandle);
+    tLeft = sec;
+    elTimer.setAttribute("data-running", "1");
+    elTimer.removeAttribute("data-done");
+    paint();
+    tHandle = setInterval(function () {
+      tLeft--;
+      paint();
+      if (tLeft <= 0) {
+        clearInterval(tHandle);
+        elTimer.removeAttribute("data-running");
+        elTimer.setAttribute("data-done", "1");
+        elTimer.textContent = "พร้อม";
+        if (navigator.vibrate) navigator.vibrate([120, 80, 120]);
+      }
+    }, 1000);
+  }
+  elTimer.addEventListener("click", function () {
+    if (elTimer.getAttribute("data-running") === "1") {
+      clearInterval(tHandle);
+      elTimer.removeAttribute("data-running");
+      elTimer.textContent = "--:--";
+    } else {
+      startTimer(90);
+    }
+  });
+
+  document.getElementById("reset").addEventListener("click", function () {
+    var k = keyOf(dateOf(cur.week, cur.day));
+    delete store[k];
+    save();
+    render();
+  });
+
+  render();
+})();
+</script>
+<script>
+
+(function () {
+  "use strict";
+  var KEY = "hybrid26.theme";
+  var root = document.documentElement;
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  if (saved === "dark" || saved === "light") root.setAttribute("data-theme", saved);
+
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "theme-btn";
+  function label() {
+    var t = root.getAttribute("data-theme");
+    btn.textContent = t === "dark" ? "\u263e มืด" : t === "light" ? "\u2600 สว่าง" : "\u25d1 อัตโนมัติ";
+    btn.setAttribute("aria-label", "สลับธีม — ตอนนี้: " + btn.textContent);
+  }
+  btn.addEventListener("click", function () {
+    var t = root.getAttribute("data-theme");
+    var next = t === "dark" ? "light" : t === "light" ? null : "dark";
+    if (next) { root.setAttribute("data-theme", next); try { localStorage.setItem(KEY, next); } catch (e) {} }
+    else { root.removeAttribute("data-theme"); try { localStorage.removeItem(KEY); } catch (e) {} }
+    label();
+  });
+  label();
+
+  var head = document.querySelector(".masthead");
+  if (head) head.appendChild(btn);
+})();
+
+</script>
+</body>
+</html>
