@@ -459,6 +459,47 @@
     line-height: 1.45;
   }
 
+  .sets {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .3125rem;
+    padding-top: .125rem;
+  }
+  .set {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 1.5px solid var(--line);
+    border-radius: .5rem;
+    background: var(--surface-2);
+    color: var(--faint);
+    font-family: var(--mono);
+    font-size: .8125rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  .set:hover { border-color: var(--accent); color: var(--accent); }
+  .set[data-done="1"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+    font-weight: 650;
+  }
+  .set[data-next="1"] { border-color: var(--accent); border-style: dashed; color: var(--accent); }
+  .set:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .set-count {
+    font-family: var(--mono);
+    font-size: .75rem;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+    margin-left: .1875rem;
+  }
+  .set-count[data-full="1"] { color: var(--accent); font-weight: 600; }
+
   input.log {
     font-family: var(--mono);
     font-size: .8125rem;
@@ -595,16 +636,16 @@
   var DELOAD = { 4: true, 8: true };
   var KEY = "hybrid26.v1";
 
-  // interval / tempo(นาที) / long run(กม.) ต่อสัปดาห์
+  // interval / tempo(นาที) / long run(กม.) / เวลาพักระหว่างเที่ยว(วินาที) ต่อสัปดาห์
   var RUN = [
-    ["5 × 400 ม. (จ็อกพัก 90 วิ)", 15, 8],
-    ["6 × 400 ม. (จ็อกพัก 90 วิ)", 18, 9],
-    ["5 × 800 ม. (จ็อกพัก 2 นาที)", 22, 10],
-    ["4 × 400 ม. (จ็อกพัก 2 นาที)", 12, 7],
-    ["6 × 800 ม. (จ็อกพัก 2 นาที)", 22, 11],
-    ["8 × 400 ม. (จ็อกพัก 90 วิ)", 25, 12],
-    ["5 × 1000 ม. (จ็อกพัก 2:30)", 28, 13],
-    ["4 × 400 ม. (จ็อกพัก 2 นาที)", 12, null]
+    ["5 × 400 ม. (จ็อกพัก 90 วิ)", 15, 8, 90],
+    ["6 × 400 ม. (จ็อกพัก 90 วิ)", 18, 9, 90],
+    ["5 × 800 ม. (จ็อกพัก 2 นาที)", 22, 10, 120],
+    ["4 × 400 ม. (จ็อกพัก 2 นาที)", 12, 7, 120],
+    ["6 × 800 ม. (จ็อกพัก 2 นาที)", 22, 11, 120],
+    ["8 × 400 ม. (จ็อกพัก 90 วิ)", 25, 12, 90],
+    ["5 × 1000 ม. (จ็อกพัก 2:30)", 28, 13, 150],
+    ["4 × 400 ม. (จ็อกพัก 2 นาที)", 12, null, 120]
   ];
 
   var CORE = {
@@ -765,7 +806,7 @@
   var PROGRESS_NOTE = "ทำครบ rep บนสุดของทุกเซตแล้วยัง RPE ≤ 8 → ครั้งหน้าเพิ่มน้ำหนัก 2.5-5%";
 
   function session(week, dayIdx) {
-    var r = RUN[week - 1], ivl = r[0], tempo = r[1], longKm = r[2];
+    var r = RUN[week - 1], ivl = r[0], tempo = r[1], longKm = r[2], ivlRest = r[3];
 
     if (dayIdx === 0) return {
       kind: "lift", title: "Upper A — Strength", sub: "ดัน/ดึงหนัก · ประมาณ 70 นาที",
@@ -784,7 +825,7 @@
                 "A-skip: กระโดดสลับ ยกเข่าสูงระดับสะโพก ลงด้วยปลายเท้า",
                 "Strides: เร่งขึ้นจนเกือบเต็มที่ 20 วิ แล้วเดินกลับ ทำ 4 เที่ยว",
                 "อุ่นเครื่องไม่ครบแล้วซัด interval = ทางลัดสู่การบาดเจ็บ"] },
-          { n: "Main set", s: ivl, d: "หนักจริงช่วงนี้ — จับเวลาทุกเที่ยว", log: true,
+          { n: "Main set", s: ivl, d: "หนักจริงช่วงนี้ — จับเวลาทุกเที่ยว", log: true, r: ivlRest,
             q: "how to run 400m repeats interval training pacing",
             c: ["เที่ยวแรกคือเที่ยวที่ 'ช้าเกินไป' เสมอ — คนส่วนใหญ่ออกเร็วเกิน",
                 "เป้าหมายคือทุกเที่ยวเวลาเท่ากัน ±2 วินาที",
@@ -879,7 +920,14 @@
   var store = {};
   try { store = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { store = {}; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
-  function rec(key) { if (!store[key]) store[key] = { done: {}, log: {} }; return store[key]; }
+  function rec(key) {
+    var r = store[key];
+    if (!r) { r = store[key] = { done: {}, log: {}, sets: {} }; }
+    if (!r.done) r.done = {};
+    if (!r.log) r.log = {};
+    if (!r.sets) r.sets = {};
+    return r;
+  }
 
   var DAY_NAMES = ["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"];
   var MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
@@ -980,7 +1028,8 @@
       DAY_NAMES[cur.day] + " " + d.getDate() + " " + MONTHS[d.getMonth()] +
       (sameDay(d, today) ? " · วันนี้" : "");
     document.getElementById("title").textContent = s.title;
-    document.getElementById("subline").textContent = s.sub + " · แตะชื่อท่าเพื่อดูวิธีทำ";
+    document.getElementById("subline").textContent =
+      s.sub + " · แตะเลขเซตทุกครั้งที่ทำจบ · แตะชื่อท่าเพื่อดูวิธีทำ";
     document.getElementById("footnote").textContent = s.note;
 
     var banner = document.getElementById("banner");
@@ -1014,9 +1063,19 @@
     refreshMeter();
   }
 
+  // "5 × 4-6 · RPE 8" -> 5   |   "6 × 400 ม." -> 6   |   "10-12 นาที" -> 0
+  function setCount(spec) {
+    var m = /^\s*(\d+)\s*×/.exec(spec || "");
+    var n = m ? parseInt(m[1], 10) : 0;
+    return (n > 0 && n <= 12) ? n : 0;
+  }
+
   function itemNode(it, i, r, k) {
     var li = document.createElement("li");
     li.className = "item" + (r.done[i] ? " done" : "");
+
+    var total = setCount(it.s);
+    if (!r.sets) r.sets = {};
 
     var cb = document.createElement("input");
     cb.type = "checkbox";
@@ -1026,11 +1085,28 @@
     cb.addEventListener("change", function () {
       r.done[i] = cb.checked;
       li.classList.toggle("done", cb.checked);
+      if (total) { r.sets[i] = cb.checked ? total : 0; paintSets(); }
       save();
       buildDays();
       refreshMeter();
-      if (cb.checked && it.r) startTimer(it.r);
+      if (cb.checked && it.r && !total) startTimer(it.r);
     });
+
+    var pills = [], counter = null;
+    function paintSets() {
+      var done = r.sets[i] || 0;
+      for (var p = 0; p < pills.length; p++) {
+        if (p < done) pills[p].setAttribute("data-done", "1");
+        else pills[p].removeAttribute("data-done");
+        if (p === done) pills[p].setAttribute("data-next", "1");
+        else pills[p].removeAttribute("data-next");
+      }
+      if (counter) {
+        counter.textContent = done + "/" + total + " เซต";
+        if (done >= total) counter.setAttribute("data-full", "1");
+        else counter.removeAttribute("data-full");
+      }
+    }
 
     var body = document.createElement("div");
     body.className = "body";
@@ -1095,6 +1171,45 @@
         spec.appendChild(rb);
       }
       body.appendChild(spec);
+    }
+
+    if (total) {
+      var wrap = document.createElement("div");
+      wrap.className = "sets";
+      wrap.setAttribute("role", "group");
+      wrap.setAttribute("aria-label", "นับเซต " + it.n);
+
+      for (var p = 1; p <= total; p++) {
+        var pill = document.createElement("button");
+        pill.type = "button";
+        pill.className = "set";
+        pill.textContent = p;
+        pill.setAttribute("aria-label", "เซตที่ " + p);
+        (function (n) {
+          pill.addEventListener("click", function () {
+            var was = r.sets[i] || 0;
+            // แตะเซตที่ทำไปแล้ว = ถอยกลับ / แตะเซตข้างหน้า = นับถึงเซตนั้น
+            r.sets[i] = (was >= n) ? n - 1 : n;
+            var full = r.sets[i] >= total;
+            r.done[i] = full;
+            cb.checked = full;
+            li.classList.toggle("done", full);
+            paintSets();
+            save();
+            buildDays();
+            refreshMeter();
+            if (r.sets[i] > was && !full && it.r) startTimer(it.r);
+          });
+        })(p);
+        pills.push(pill);
+        wrap.appendChild(pill);
+      }
+
+      counter = document.createElement("span");
+      counter.className = "set-count";
+      wrap.appendChild(counter);
+      body.appendChild(wrap);
+      paintSets();
     }
 
     if (it.d) {
