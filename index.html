@@ -144,7 +144,8 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: .375rem 1rem;
     padding: .25rem .125rem .5rem;
     border-bottom: 1px solid var(--line);
   }
@@ -153,6 +154,22 @@
     font-size: 1.0625rem;
     font-weight: 650;
     letter-spacing: -.01em;
+  }
+  .masthead .brand {
+    display: flex;
+    align-items: baseline;
+    gap: .4375rem;
+  }
+  .masthead .ver {
+    font-family: var(--mono);
+    font-size: .6875rem;
+    color: var(--faint);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: .3125rem;
+    padding: .0625rem .3125rem;
+    letter-spacing: .03em;
+    white-space: nowrap;
   }
   .masthead .block {
     font-family: var(--mono);
@@ -584,6 +601,11 @@
   .timer[data-done="1"] { border-color: var(--run); color: var(--run); background: var(--run-soft); }
   .timer:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -591,7 +613,10 @@
 
 <div class="shell">
   <div class="masthead">
-    <h1>Hybrid Athlete</h1>
+    <div class="brand">
+      <h1>Hybrid Athlete</h1>
+      <span class="ver" id="ver"></span>
+    </div>
     <span class="block" id="blockLabel">8 สัปดาห์ · 10 ส.ค. – 4 ต.ค.</span>
   </div>
 
@@ -625,12 +650,17 @@
       <div class="track"><i id="bar"></i></div>
     </div>
     <button class="timer" id="timer" type="button" title="แตะเลข พัก เพื่อเริ่มจับเวลา">--:--</button>
+    <span class="sr-only" id="timerSay" aria-live="assertive"></span>
   </div>
 </div>
 
 <script>
 (function () {
   "use strict";
+
+  // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
+  var VERSION = "1.2.0";
+  var BUILD = "2026-08-10";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
   var DELOAD = { 4: true, 8: true };
@@ -1238,43 +1268,173 @@
   }
 
   // ---------- rest timer ----------
+  // นับจาก "เวลาเส้นตาย" ไม่ใช่ลดทีละวินาที — หน้าจอดับหรือสลับแอปแล้วเวลายังเดินต่อ
   var elTimer = document.getElementById("timer");
-  var tHandle = null, tLeft = 0;
+  var elSay = document.getElementById("timerSay");
+  var TKEY = "hybrid26.rest";
+  var tHandle = null, tEnd = 0, tRunning = false;
+  var actx = null, beeps = [], wake = null;
+  var baseTitle = document.title, titleFlash = false;
 
   function fmt(sec) {
     var m = Math.floor(sec / 60), s = sec % 60;
     return m + ":" + ("0" + s).slice(-2);
   }
-  function paint() {
-    elTimer.textContent = fmt(Math.max(tLeft, 0));
+  function leftSec() {
+    return Math.max(0, Math.ceil((tEnd - Date.now()) / 1000));
   }
-  function startTimer(sec) {
+  function paint() {
+    elTimer.textContent = fmt(leftSec());
+  }
+
+  // ---- เสียงเตือน ----
+  function ctxOf() {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!actx) { try { actx = new AC(); } catch (e) { return null; } }
+    if (actx.state === "suspended") { try { actx.resume(); } catch (e) {} }
+    return actx;
+  }
+  function scheduleBeep(delaySec) {
+    var c = ctxOf();
+    if (!c) return;
+    var t0 = c.currentTime + Math.max(delaySec, 0);
+    [0, 0.3, 0.6].forEach(function (off) {
+      var osc = c.createOscillator(), g = c.createGain(), at = t0 + off;
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, at);
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(0.3, at + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.24);
+      osc.connect(g); g.connect(c.destination);
+      osc.start(at); osc.stop(at + 0.26);
+      beeps.push(osc);
+    });
+  }
+  function cancelBeep() {
+    beeps.forEach(function (o) { try { o.stop(); o.disconnect(); } catch (e) {} });
+    beeps = [];
+  }
+
+  // ---- กันหน้าจอดับระหว่างพัก ----
+  function lockScreen() {
+    if (wake || !navigator.wakeLock) return;
+    try {
+      navigator.wakeLock.request("screen").then(function (w) {
+        wake = w;
+        w.addEventListener("release", function () { wake = null; });
+      }, function () {});
+    } catch (e) {}
+  }
+  function unlockScreen() {
+    if (!wake) return;
+    try { wake.release(); } catch (e) {}
+    wake = null;
+  }
+
+  function notify() {
+    try {
+      if (window.Notification && Notification.permission === "granted") {
+        new Notification("พักครบแล้ว", { body: "กลับไปเซตต่อไปได้เลย", tag: "hybrid-rest" });
+      }
+    } catch (e) {}
+    if (document.hidden) {
+      titleFlash = true;
+      document.title = "⏰ พักครบแล้ว — " + baseTitle;
+    }
+  }
+  function clearFlash() {
+    if (!titleFlash) return;
+    titleFlash = false;
+    document.title = baseTitle;
+  }
+
+  function finish() {
+    if (!tRunning) return;
+    tRunning = false;
+    clearInterval(tHandle); tHandle = null;
+    try { localStorage.removeItem(TKEY); } catch (e) {}
+    unlockScreen();
+    elTimer.removeAttribute("data-running");
+    elTimer.setAttribute("data-done", "1");
+    elTimer.textContent = "พร้อม";
+    if (elSay) elSay.textContent = "พักครบแล้ว";
+    // เสียงที่จองไว้ล่วงหน้าจะดังเองถ้า AudioContext ยังทำงาน — ถ้าถูกพักไว้ (เช่นจอล็อกบน iOS) ค่อยดังตอนนี้
+    if (!actx || actx.state !== "running") { cancelBeep(); scheduleBeep(0); }
+    else beeps = [];
+    if (navigator.vibrate) { try { navigator.vibrate([160, 90, 160, 90, 280]); } catch (e) {} }
+    notify();
+  }
+
+  function tick() {
+    if (!tRunning) return;
+    if (leftSec() <= 0) finish(); else paint();
+  }
+
+  function stopTimer() {
+    tRunning = false;
+    clearInterval(tHandle); tHandle = null;
+    cancelBeep();
+    unlockScreen();
+    try { localStorage.removeItem(TKEY); } catch (e) {}
+    elTimer.removeAttribute("data-running");
+    elTimer.removeAttribute("data-done");
+    elTimer.textContent = "--:--";
+    if (elSay) elSay.textContent = "";
+  }
+
+  function run(endAt, withSound) {
+    cancelBeep();
     clearInterval(tHandle);
-    tLeft = sec;
+    tEnd = endAt;
+    tRunning = true;
     elTimer.setAttribute("data-running", "1");
     elTimer.removeAttribute("data-done");
+    if (elSay) elSay.textContent = "";
+    clearFlash();
     paint();
-    tHandle = setInterval(function () {
-      tLeft--;
-      paint();
-      if (tLeft <= 0) {
-        clearInterval(tHandle);
-        elTimer.removeAttribute("data-running");
-        elTimer.setAttribute("data-done", "1");
-        elTimer.textContent = "พร้อม";
-        if (navigator.vibrate) navigator.vibrate([120, 80, 120]);
-      }
-    }, 1000);
+    if (withSound) scheduleBeep((tEnd - Date.now()) / 1000);
+    lockScreen();
+    tHandle = setInterval(tick, 250);
   }
-  elTimer.addEventListener("click", function () {
-    if (elTimer.getAttribute("data-running") === "1") {
-      clearInterval(tHandle);
-      elTimer.removeAttribute("data-running");
-      elTimer.textContent = "--:--";
-    } else {
-      startTimer(90);
+
+  function startTimer(sec) {
+    if (window.Notification && Notification.permission === "default") {
+      try { Notification.requestPermission(); } catch (e) {}
     }
+    try { localStorage.setItem(TKEY, String(Date.now() + sec * 1000)); } catch (e) {}
+    run(Date.now() + sec * 1000, true);
+  }
+
+  elTimer.addEventListener("click", function () {
+    if (tRunning) stopTimer();
+    else startTimer(90);
   });
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) return;
+    clearFlash();
+    if (!tRunning) return;
+    if (leftSec() <= 0) finish();
+    else { paint(); lockScreen(); }
+  });
+
+  // กลับมาเปิดหน้าใหม่ระหว่างที่ยังพักอยู่ — นับต่อจากเดิม (ไม่จองเสียงล่วงหน้า เพราะยังไม่มีการแตะจอ)
+  (function () {
+    var saved = 0;
+    try { saved = parseInt(localStorage.getItem(TKEY) || "0", 10); } catch (e) {}
+    if (saved && saved > Date.now()) run(saved, false);
+    else if (saved) { try { localStorage.removeItem(TKEY); } catch (e) {} }
+  })();
+
+  // ---------- version ----------
+  (function () {
+    var el = document.getElementById("ver");
+    if (!el) return;
+    el.textContent = "v" + VERSION;
+    el.title = "เวอร์ชัน " + VERSION + " · อัปเดต " + BUILD;
+    el.setAttribute("aria-label", el.title);
+  })();
 
   document.getElementById("reset").addEventListener("click", function () {
     var k = keyOf(dateOf(cur.week, cur.day));
