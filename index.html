@@ -677,7 +677,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "1.4.0";
+  var VERSION = "1.4.1";
   var BUILD = "2026-08-10";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1295,7 +1295,7 @@
   try { soundOn = localStorage.getItem(SKEY) !== "0"; } catch (e) {}
   var tHandle = null, tEnd = 0, tRunning = false;
   var elBar = document.querySelector(".statusbar");
-  var actx = null, beeps = [], beepGen = 0, wake = null;
+  var actx = null, beeps = [], beepGen = 0, armedCtxAt = -1, wake = null;
   var ALARM_SEC = 60;                          // ปลุกนานสุด 1 นาที ถ้าไม่มีใครมาแตะหยุด
   var ringing = false, ringUntil = 0, ringHandle = null;
   var baseTitle = document.title, titleFlash = false;
@@ -1334,6 +1334,28 @@
     if (!actx) { try { actx = new AC(); } catch (e) { return null; } }
     return actx;
   }
+
+  // iOS จะไม่ปลดล็อกเสียงถ้าแค่เรียก resume() — ต้องมีเสียง "เล่นจริง" ในจังหวะที่นิ้วแตะจอ
+  // การจองเสียงไว้ล่วงหน้า 90 วิ ไม่นับว่าเล่น เลยต้องยิงบัฟเฟอร์เงียบ 1 เฟรมทิ้งตอนแตะครั้งแรก
+  function primeAudio() {
+    var c = ctxOf();
+    if (!c) return;
+    try {
+      var src = c.createBufferSource();
+      src.buffer = c.createBuffer(1, 1, 22050);
+      src.connect(c.destination);
+      src.start(0);
+    } catch (e) {}
+    if (c.state === "suspended") { try { c.resume(); } catch (e) {} }
+    if (c.state === "running") {                 // ปลดล็อกสำเร็จแล้วค่อยเลิกดัก
+      document.removeEventListener("pointerdown", primeAudio, true);
+      document.removeEventListener("touchend", primeAudio, true);
+      document.removeEventListener("click", primeAudio, true);
+    }
+  }
+  document.addEventListener("pointerdown", primeAudio, true);
+  document.addEventListener("touchend", primeAudio, true);
+  document.addEventListener("click", primeAudio, true);
   // track = true คือเสียงเตือนจริงที่จองไว้รอ (ยกเลิกได้) — false คือเสียงทดสอบสั้น ๆ ที่ไม่ยุ่งกับของจริง
   function scheduleBeep(delaySec, track, pattern) {
     var c = ctxOf();
@@ -1343,6 +1365,7 @@
     function emit() {
       if (track && gen !== beepGen) return;                // ถูกยกเลิกไปแล้วระหว่างรอ resume
       var t0 = c.currentTime + Math.max((due - Date.now()) / 1000, 0);
+      if (track) armedCtxAt = t0;                          // ไว้ตรวจตอนจบว่านาฬิกาเสียงไม่ได้ถูกหยุดกลางทาง
       (pattern || ringPattern()).forEach(function (step) {
         var osc = c.createOscillator(), g = c.createGain();
         var at = t0 + step[0], dur = step[2] || 0.24;
@@ -1363,6 +1386,7 @@
   }
   function cancelBeep() {
     beepGen++;
+    armedCtxAt = -1;
     beeps.forEach(function (o) { try { o.stop(); o.disconnect(); } catch (e) {} });
     beeps = [];
   }
@@ -1465,12 +1489,12 @@
     elTimer.setAttribute("data-done", "1");
     if (elSay) elSay.textContent = "พักครบแล้ว";
     // เสียงชุดปลุกที่จองไว้ล่วงหน้าจะดังเองถ้า AudioContext ยังทำงาน — ต้องเก็บ ref ไว้ให้ stopAlarm ยกเลิกได้
-    // จองใหม่ตอนนี้ก็ต่อเมื่อยังไม่ได้จองไว้ หรือ context ถูกพักไป (เช่นจอล็อกบน iOS)
+    // ปล่อยให้ของที่จองไว้ทำงานได้ก็ต่อเมื่อนาฬิกาของ AudioContext เดินมาถึงจุดที่จองไว้จริง
+    // ถ้า iOS แอบพัก context ระหว่างทาง currentTime จะตามหลังอยู่ = เสียงยังไม่ดัง ต้องจองใหม่เดี๋ยวนี้
+    var ringLive = beeps.length && actx && actx.state === "running" &&
+                   armedCtxAt >= 0 && actx.currentTime >= armedCtxAt - 0.5;
     if (!soundOn) cancelBeep();
-    else if (!(beeps.length && actx && actx.state === "running")) {
-      cancelBeep();
-      scheduleBeep(0, true);
-    }
+    else if (!ringLive) { cancelBeep(); scheduleBeep(0, true); }
     if (navigator.vibrate) { try { navigator.vibrate(vibePattern()); } catch (e) {} }
     notify();
     startAlarm();                              // ตั้งข้อความ/กะพริบเป็นลำดับสุดท้าย
