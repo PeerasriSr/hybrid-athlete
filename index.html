@@ -677,7 +677,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "1.4.1";
+  var VERSION = "1.5.0";
   var BUILD = "2026-08-10";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1335,6 +1335,13 @@
     return actx;
   }
 
+  // ค่าปริยายของ Safari คือ ambient = ผสมกับเพลงได้ แต่โดนสวิตช์เงียบปิดสนิท
+  // transient = เล่นทับเพลงโดยหรี่เพลงลงชั่วคราว ไม่ตัดเพลง และไม่โดนสวิตช์เงียบ
+  // ตั้งเฉพาะตอนจะมีเสียงจริง แล้วคืนค่าเดิมทันทีที่เลิก เพลงจะได้ไม่โดนหรี่ค้าง
+  function audioSession(type) {
+    try { if (navigator.audioSession) navigator.audioSession.type = type; } catch (e) {}
+  }
+
   // iOS จะไม่ปลดล็อกเสียงถ้าแค่เรียก resume() — ต้องมีเสียง "เล่นจริง" ในจังหวะที่นิ้วแตะจอ
   // การจองเสียงไว้ล่วงหน้า 90 วิ ไม่นับว่าเล่น เลยต้องยิงบัฟเฟอร์เงียบ 1 เฟรมทิ้งตอนแตะครั้งแรก
   function primeAudio() {
@@ -1411,7 +1418,11 @@
       paintSound();
       armBeep();                             // เปิด = จองเสียงรอบที่พักอยู่ / ปิด = ยกเลิกเสียงที่จองไว้
       // แตะปุ่มคือ user gesture — ปลดล็อกเสียงบน iOS ได้ตรงนี้ และได้ยินตัวอย่างเสียงเลย
-      if (soundOn) scheduleBeep(0, false, ringPattern().slice(0, 4));   // ตัวอย่าง = เสียงปลุกจริงหนึ่งชุด
+      if (soundOn) {
+        audioSession("transient");               // ให้ตัวอย่างดังในเงื่อนไขเดียวกับเสียงปลุกจริง
+        scheduleBeep(0, false, ringPattern().slice(0, 4));   // ตัวอย่าง = เสียงปลุกจริงหนึ่งชุด
+        setTimeout(function () { if (!ringing) audioSession("auto"); }, 1200);
+      }
     });
   }
 
@@ -1472,6 +1483,7 @@
     clearInterval(ringHandle); ringHandle = null;
     document.removeEventListener("pointerdown", dismissOutside, true);
     cancelBeep();
+    audioSession("auto");                        // คืน session ให้เพลงกลับมาดังเท่าเดิม
     if (navigator.vibrate) { try { navigator.vibrate(0); } catch (e) {} }
     elTimer.removeAttribute("data-alarm");
     elTimer.removeAttribute("aria-label");
@@ -1494,7 +1506,10 @@
     var ringLive = beeps.length && actx && actx.state === "running" &&
                    armedCtxAt >= 0 && actx.currentTime >= armedCtxAt - 0.5;
     if (!soundOn) cancelBeep();
-    else if (!ringLive) { cancelBeep(); scheduleBeep(0, true); }
+    else {
+      audioSession("transient");                 // หรี่เพลงแทนที่จะโดนสวิตช์เงียบปิด
+      if (!ringLive) { cancelBeep(); scheduleBeep(0, true); }
+    }
     if (navigator.vibrate) { try { navigator.vibrate(vibePattern()); } catch (e) {} }
     notify();
     startAlarm();                              // ตั้งข้อความ/กะพริบเป็นลำดับสุดท้าย
