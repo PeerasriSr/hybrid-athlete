@@ -745,7 +745,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "2.0.2";
+  var VERSION = "2.1.0";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1705,6 +1705,7 @@
       return;
     }
     pushCancel();
+    syncPushSub();                             // กลับเข้าแอปทีไร เช็คว่าการเตือนยังต่ออยู่ไหม
     clearFlash();
     if (staleAt) { showStale(staleAt); return; }   // อัปเดตว่าครบไปนานแค่ไหนแล้ว
     if (!tRunning) return;
@@ -1775,6 +1776,31 @@
       " · สิทธิ์แจ้งเตือน: " + perm +
       " · เซิร์ฟเวอร์: " + (PUSH_API ? "ตั้งแล้ว" : "ยังไม่ตั้ง") +
       " · เปิดใช้แล้ว: " + (pushSub() ? "ใช่" : "ไม่");
+  }
+
+  // localStorage หายได้ (เจอมาแล้ว) แต่เบราว์เซอร์เก็บ subscription ตัวจริงไว้เอง
+  // ถามมันตรง ๆ แล้วเอามาเติมกลับ ไม่งั้น push เงียบไปเฉย ๆ โดยไม่มีอะไรบอก
+  // เขียนเฉพาะคีย์ hybrid26.push เท่านั้น ไม่แตะ hybrid26.v1 ที่เป็นข้อมูลเทรน
+  function syncPushSub() {
+    if (!pushSupported() || !navigator.serviceWorker.getRegistration) return;
+    navigator.serviceWorker.getRegistration().then(function (reg) {
+      if (!reg || !reg.pushManager) return null;
+      return reg.pushManager.getSubscription().then(function (sub) {
+        if (sub) return sub;
+        // เบราว์เซอร์ก็ไม่เหลือแล้ว แต่เคยอนุญาตไว้ = สมัครใหม่ได้เลย ไม่ต้องรอให้กดปุ่ม
+        if (Notification.permission !== "granted") return null;
+        return reg.pushManager.subscribe({
+          userVisibleOnly: true, applicationServerKey: vapidBytes(VAPID_PUBLIC),
+        }).catch(function () { return null; });
+      });
+    }).then(function (sub) {
+      if (!sub) return;
+      var was = pushSub();
+      if (was && was.endpoint === sub.endpoint) return;
+      try { localStorage.setItem(PKEY, JSON.stringify(sub)); } catch (e) {}
+      paintPush();
+      pushSay("ต่อการเตือนกลับคืนให้แล้ว");
+    }).catch(function () {});
   }
 
   function paintPush() {
@@ -1887,7 +1913,16 @@
       try { elPushPanel.scrollIntoView({ block: "center" }); } catch (e) {}
     });
     paintPush();
-    if (PUSH_API && pushSupported() && !pushSub()) elPushPanel.hidden = false;   // ยังไม่ได้เปิด = โชว์ให้เห็น
+    // เด้งกรอบให้เห็นเฉพาะตอนที่ยังไม่เคยอนุญาต — ถ้าเคยอนุญาตแล้วเดี๋ยวต่อกลับให้เอง ไม่ต้องกวน
+    var everAllowed = false;
+    try { everAllowed = window.Notification && Notification.permission === "granted"; } catch (e) {}
+    if (PUSH_API && pushSupported() && !pushSub() && !everAllowed) elPushPanel.hidden = false;
+    // เคยอนุญาตไว้แล้ว = เคยเปิดใช้ ลองต่อกลับให้เองทุกครั้งที่เปิดแอป
+    try {
+      if (PUSH_API && pushSupported() && Notification.permission === "granted") {
+        navigator.serviceWorker.register("sw.js").then(syncPushSub, function () {});
+      }
+    } catch (e) {}
   })();
 
   // ---------- สำรองข้อมูล ----------
