@@ -745,7 +745,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "2.2.1";
+  var VERSION = "2.3.0";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1396,7 +1396,9 @@
       elNote.setAttribute("data-late", "1");
       elNote.hidden = false;
     } else if (tRunning) {
-      elNote.textContent = "เปิดหน้านี้ค้างไว้จนครบ — ถ้าสลับไปแอปอื่น iOS จะพักหน้าเว็บไว้ เสียงจะดังตอนกลับมาแทน";
+      elNote.textContent = pushSub()
+        ? "เตือนข้ามแอปเปิดอยู่ — สลับไปทำอย่างอื่นได้ เดี๋ยวเตือนให้ตอนหมดเวลา"
+        : "เปิดหน้านี้ค้างไว้จนครบ — ถ้าสลับไปแอปอื่น iOS จะพักหน้าเว็บไว้ เสียงจะดังตอนกลับมาแทน";
       elNote.removeAttribute("data-late");
       elNote.hidden = false;
     } else {
@@ -1688,9 +1690,21 @@
     tHandle = setInterval(tick, 250);
   }
 
+  // อนุญาตแจ้งเตือนแล้วก็เปิดเตือนข้ามแอปให้เลยในจังหวะเดียวกัน
+  // ไม่มีเหตุผลให้ต้องไปกดอนุญาตอีกทีที่ปุ่มแยก ในเมื่อเพิ่งกดอนุญาตไปหมาด ๆ
+  function enablePushNow() {
+    if (!PUSH_API || !pushSupported() || !installedApp()) return;
+    try { navigator.serviceWorker.register("sw.js").then(syncPushSub, function () {}); } catch (e) {}
+  }
+
   function startTimer(sec) {
     if (window.Notification && Notification.permission === "default") {
-      try { Notification.requestPermission(); } catch (e) {}
+      try {
+        var ask = Notification.requestPermission(function (res) {   // Safari รุ่นเก่าใช้ callback
+          if (res === "granted") enablePushNow();
+        });
+        if (ask && ask.then) ask.then(function (res) { if (res === "granted") enablePushNow(); });
+      } catch (e) {}
     }
     try { localStorage.setItem(TKEY, String(Date.now() + sec * 1000)); } catch (e) {}
     run(Date.now() + sec * 1000, true);
@@ -1803,6 +1817,7 @@
       if (was && was.endpoint === sub.endpoint) return;
       try { localStorage.setItem(PKEY, JSON.stringify(sub)); } catch (e) {}
       paintPush();
+      paintNote();                             // ข้อความใต้จอเปลี่ยนความหมายทันทีที่เตือนข้ามแอปใช้ได้
       pushSay("ต่อการเตือนกลับคืนให้แล้ว");
     }).catch(function () {});
   }
