@@ -713,11 +713,13 @@
   </section>
 
   <section class="backup" id="backupPanel" hidden aria-label="สำรองข้อมูล">
-    <p>ข้อมูลทั้งหมดอยู่ในเบราว์เซอร์เครื่องนี้ที่เดียว — Safari ล้างทิ้งเองได้ ก๊อปข้อความข้างล่างเก็บไว้ในโน้ต/แชท/เมล ไว้กู้คืนทีหลัง</p>
-    <textarea id="backupText" rows="6" readonly spellcheck="false"></textarea>
+    <p>ข้อมูลทั้งหมดอยู่ในเบราว์เซอร์เครื่องนี้ที่เดียว — Safari ล้างทิ้งเองได้ ก๊อปข้อความข้างล่างเก็บไว้ในโน้ต/แชท/เมล<br>
+      จะเอากลับคืน: วางข้อความที่เคยเก็บไว้ทับในช่องนี้ แล้วกดนำเข้า (เติมเฉพาะวันที่ยังไม่มี ไม่ทับของที่ติ๊กไว้แล้ว)</p>
+    <textarea id="backupText" rows="6" spellcheck="false"></textarea>
     <div class="row2">
       <button class="reset" id="backupCopy" type="button">คัดลอก</button>
       <button class="reset" id="backupShare" type="button" hidden>แชร์เป็นไฟล์</button>
+      <button class="reset" id="backupLoad" type="button">นำเข้าจากข้อความข้างบน</button>
       <button class="reset" id="backupClose" type="button">ปิด</button>
       <span class="say" id="backupSay" role="status"></span>
     </div>
@@ -741,7 +743,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "1.8.0";
+  var VERSION = "1.9.0";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1926,6 +1928,46 @@
           try { ok = document.execCommand("copy"); } catch (e) {}
           if (ok) done(); else fail();
         }
+      });
+    }
+
+    // นำเข้า: เติมเฉพาะวันที่ยังไม่มี ไม่ทับของเดิม
+    // เอาไฟล์สำรองเก่ามาใส่ทับตรง ๆ จะกลบวันที่เพิ่งติ๊กไปหลังจากสำรอง
+    function merge(text) {
+      var pack;
+      try { pack = JSON.parse(text); } catch (e) { return { err: "อ่านข้อความไม่ออก — ต้องเป็นข้อความที่ได้จากปุ่มสำรองข้อมูล" }; }
+      if (!pack || pack.app !== "hybrid-athlete" || !pack.data) return { err: "ไม่ใช่ข้อมูลสำรองของแอปนี้" };
+
+      var old = {};
+      try { old = JSON.parse(pack.data["hybrid26.v1"] || "{}") || {}; } catch (e) { return { err: "ข้อมูลตารางเทรนในไฟล์เสีย" }; }
+      var now = {};
+      try { now = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
+
+      var added = 0, kept = 0, k;
+      for (k in old) {
+        if (!Object.prototype.hasOwnProperty.call(old, k)) continue;
+        if (Object.prototype.hasOwnProperty.call(now, k)) { kept++; continue; }
+        now[k] = old[k];
+        added++;
+      }
+      try { localStorage.setItem(KEY, JSON.stringify(now)); } catch (e) { return { err: "เขียนข้อมูลไม่สำเร็จ" }; }
+
+      // ตั้งค่า (ธีม/เสียง) เติมเฉพาะที่ยังไม่เคยตั้งในเครื่องนี้
+      ["hybrid26.theme", "hybrid26.sound"].forEach(function (sk) {
+        try { if (pack.data[sk] != null && localStorage.getItem(sk) == null) localStorage.setItem(sk, pack.data[sk]); } catch (e) {}
+      });
+      return { added: added, kept: kept };
+    }
+
+    var btnLoad = document.getElementById("backupLoad");
+    if (btnLoad) {
+      btnLoad.addEventListener("click", function () {
+        var r = merge(area.value);
+        if (r.err) { note(r.err); return; }
+        note("เพิ่มมา " + r.added + " วัน / ของเดิมในเครื่องเก็บไว้ " + r.kept + " วัน");
+        store = {};
+        try { store = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
+        render();
       });
     }
 
