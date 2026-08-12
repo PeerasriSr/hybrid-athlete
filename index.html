@@ -745,7 +745,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "2.2.0";
+  var VERSION = "2.2.1";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1922,8 +1922,10 @@
     try { everAllowed = window.Notification && Notification.permission === "granted"; } catch (e) {}
     if (PUSH_API && pushSupported() && !pushSub() && !everAllowed) elPushPanel.hidden = false;
     // เคยอนุญาตไว้แล้ว = เคยเปิดใช้ ลองต่อกลับให้เองทุกครั้งที่เปิดแอป
+    // ถามทุกครั้งไม่ว่าสิทธิ์จะอ่านได้เป็นอะไร — เคยเจอบนเครื่องจริงว่าสิทธิ์ขึ้น default
+    // ทั้งที่ subscription ยังอยู่ ถ้าไปดักด้วยสิทธิ์ก่อนก็จะไม่มีวันเจอของที่ยังใช้ได้
     try {
-      if (PUSH_API && pushSupported() && Notification.permission === "granted") {
+      if (PUSH_API && pushSupported()) {
         navigator.serviceWorker.register("sw.js").then(syncPushSub, function () {});
         // แตะแจ้งเตือนตอนแอปถูกปิดไปแล้ว = เปิดขึ้นมาใหม่ ไม่มี visibilitychange
         // ต้องสั่งหยุดปลุกซ้ำตรงนี้ ไม่งั้นมันเตือนต่อทั้งที่เปิดแอปอยู่แล้ว
