@@ -4,6 +4,10 @@ import { sendPush } from "./webpush.js";
 
 const MAX_SEC = 3600;          // พักเกินชั่วโมงถือว่าผิดปกติ ไม่รับ
 const MAX_TRIES = 3;
+// iOS ไม่สนใจ requireInteraction แบนเนอร์หุบเองเสมอ เลยต้องเตือนซ้ำเป็นระยะแทน
+// หยุดเมื่อได้ /api/cancel (แตะแจ้งเตือน หรือกลับเข้าแอป) หรือครบจำนวนรอบ
+const MAX_RINGS = 7;
+const RING_GAP_MS = 8000;      // 7 รอบ ห่างละ 8 วิ = ปลุกอยู่ราว 48 วินาที
 
 function cors(env, extra) {
   return Object.assign({
@@ -51,7 +55,7 @@ export class RestAlarm {
       const sec = Number(data.inSec);
       if (!(sec > 0 && sec <= MAX_SEC)) return json(this.env, { error: "เวลาไม่ถูกต้อง" }, 400);
       // ยึดนาฬิกาเซิร์ฟเวอร์ ไม่ใช่เวลาที่เครื่องส่งมา เผื่อนาฬิกาสองฝั่งไม่ตรงกัน
-      await this.state.storage.put({ sub: data.sub, tries: 0 });
+      await this.state.storage.put({ sub: data.sub, tries: 0, rings: 0 });
       await this.state.storage.setAlarm(Date.now() + sec * 1000);
       console.log("SCHEDULE จองไว้อีก " + sec + " วินาที");
       return json(this.env, { ok: true, at: Date.now() + sec * 1000 });
@@ -63,23 +67,31 @@ export class RestAlarm {
     const sub = await this.state.storage.get("sub");
     if (!validSub(sub)) return;
     const tries = (await this.state.storage.get("tries")) || 0;
+    const rings = (await this.state.storage.get("rings")) || 0;
 
     const r = await sendPush(sub, JSON.stringify({
-      title: "พักครบแล้ว", body: "กลับไปเซตต่อไปได้เลย",
+      title: "พักครบแล้ว", body: "แตะเพื่อหยุดเตือน แล้วกลับไปเซตต่อไป",
     }), this.env);
 
     // ตัว alarm ไม่ใช่ HTTP request เลยไม่โผล่ในล็อกเอง ต้อง log เองถึงจะไล่ปัญหาได้
     console.log("ALARM ยิง push: ok=" + r.ok + " status=" + r.status +
-                " รอบที่=" + (tries + 1) + (r.text ? " ตอบกลับ=" + String(r.text).slice(0, 300) : ""));
+                " ปลุกรอบที่=" + (rings + 1) + "/" + MAX_RINGS +
+                (r.text ? " ตอบกลับ=" + String(r.text).slice(0, 300) : ""));
 
-    if (r.ok) return;
-    if (r.status === 404 || r.status === 410) {    // subscription ตายแล้ว ลองอีกก็เท่านั้น
-      await this.state.storage.delete("sub");
+    if (!r.ok) {
+      if (r.status === 404 || r.status === 410) {  // subscription ตายแล้ว ลองอีกก็เท่านั้น
+        await this.state.storage.delete("sub");
+        return;
+      }
+      if (tries + 1 >= MAX_TRIES) return;          // มีเพดาน ไม่งั้น alarm ปลุกตัวเองวนไม่จบ
+      await this.state.storage.put("tries", tries + 1);
+      await this.state.storage.setAlarm(Date.now() + 3000);
       return;
     }
-    if (tries + 1 >= MAX_TRIES) return;            // มีเพดาน ไม่งั้น alarm ปลุกตัวเองวนไม่จบ
-    await this.state.storage.put("tries", tries + 1);
-    await this.state.storage.setAlarm(Date.now() + 3000);
+
+    // ส่งผ่านแล้ว — เตือนซ้ำจนกว่าจะแตะ (จะมี /api/cancel เข้ามาลบนัดทิ้ง) หรือครบรอบ
+    await this.state.storage.put({ tries: 0, rings: rings + 1 });
+    if (rings + 1 < MAX_RINGS) await this.state.storage.setAlarm(Date.now() + RING_GAP_MS);
   }
 }
 

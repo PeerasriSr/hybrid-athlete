@@ -745,7 +745,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "2.1.1";
+  var VERSION = "2.2.0";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1925,6 +1925,9 @@
     try {
       if (PUSH_API && pushSupported() && Notification.permission === "granted") {
         navigator.serviceWorker.register("sw.js").then(syncPushSub, function () {});
+        // แตะแจ้งเตือนตอนแอปถูกปิดไปแล้ว = เปิดขึ้นมาใหม่ ไม่มี visibilitychange
+        // ต้องสั่งหยุดปลุกซ้ำตรงนี้ ไม่งั้นมันเตือนต่อทั้งที่เปิดแอปอยู่แล้ว
+        pushCancel();
       }
     } catch (e) {}
   })();
