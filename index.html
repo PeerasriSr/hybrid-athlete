@@ -743,7 +743,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "1.9.0";
+  var VERSION = "2.0.0";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1731,7 +1731,7 @@
   // ---------- เตือนข้ามแอป (Web Push) ----------
   // ของเสริมล้วน ๆ — ถ้าพังหรือเน็ตหลุด ต้องเหลือเสียงปลุกในเครื่องแบบเดิมทุกอย่าง
   // บน iOS ใช้ได้เฉพาะตอนเปิดจากไอคอนหน้าโฮมเท่านั้น ในแท็บ Safari ธรรมดาใช้ไม่ได้
-  var PUSH_API = "";                 // URL ของ Cloudflare Worker — เติมหลัง deploy
+  var PUSH_API = "https://hybrid-rest-push.peerasrisrimaroeng.workers.dev";
   var VAPID_PUBLIC = "BBHcw9O25hLm2g7a8AAwpv9Pv91QtDwq5Bys12QVVaNxs2WOzx2sIXvWC1X7ZuFALNMDNtgx2acunlWJjR9AJV4";
   var PKEY = "hybrid26.push";
   var elPushPanel = document.getElementById("pushPanel");

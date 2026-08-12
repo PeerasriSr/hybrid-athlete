@@ -4,6 +4,6 @@
   "type": "module",
   "scripts": {
     "test": "node test-webpush.mjs",
-    "deploy": "wrangler deploy"
+    "deploy": "npx wrangler@3 deploy"
   }
 }
