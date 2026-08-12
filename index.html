@@ -554,6 +554,33 @@
     white-space: nowrap;
   }
   .reset:hover { color: var(--text); border-color: var(--faint); }
+  .card > footer .acts { display: flex; gap: .5rem; }
+
+  /* ---------- สำรองข้อมูล ---------- */
+  .backup {
+    margin: 0 0 1rem;
+    padding: .875rem 1rem 1rem;
+    border: 1px solid var(--accent);
+    border-radius: .625rem;
+    background: var(--surface);
+  }
+  .backup[hidden] { display: none; }
+  .backup p { margin: 0 0 .625rem; font-size: .8125rem; line-height: 1.5; color: var(--dim); }
+  .backup textarea {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: var(--mono);
+    font-size: .6875rem;
+    line-height: 1.4;
+    padding: .5rem;
+    border: 1px solid var(--line);
+    border-radius: .4375rem;
+    background: var(--surface-2);
+    color: var(--dim);
+    resize: vertical;
+  }
+  .backup .row2 { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .625rem; }
+  .backup .say { font-size: .75rem; color: var(--run); }
 
   /* ---------- sticky status bar ---------- */
   .statusbar {
@@ -665,9 +692,23 @@
     <div id="content"></div>
     <footer>
       <span class="footnote" id="footnote"></span>
-      <button class="reset" id="reset" type="button">ล้างวันนี้</button>
+      <span class="acts">
+        <button class="reset" id="backup" type="button">สำรองข้อมูล</button>
+        <button class="reset" id="reset" type="button">ล้างวันนี้</button>
+      </span>
     </footer>
   </article>
+
+  <section class="backup" id="backupPanel" hidden aria-label="สำรองข้อมูล">
+    <p>ข้อมูลทั้งหมดอยู่ในเบราว์เซอร์เครื่องนี้ที่เดียว — Safari ล้างทิ้งเองได้ ก๊อปข้อความข้างล่างเก็บไว้ในโน้ต/แชท/เมล ไว้กู้คืนทีหลัง</p>
+    <textarea id="backupText" rows="6" readonly spellcheck="false"></textarea>
+    <div class="row2">
+      <button class="reset" id="backupCopy" type="button">คัดลอก</button>
+      <button class="reset" id="backupShare" type="button" hidden>แชร์เป็นไฟล์</button>
+      <button class="reset" id="backupClose" type="button">ปิด</button>
+      <span class="say" id="backupSay" role="status"></span>
+    </div>
+  </section>
 </div>
 
 <div class="statusbar">
@@ -687,7 +728,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "1.6.0";
+  var VERSION = "1.7.0";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1664,6 +1705,91 @@
     el.textContent = "v" + VERSION;
     el.title = "เวอร์ชัน " + VERSION + " · อัปเดต " + BUILD;
     el.setAttribute("aria-label", el.title);
+  })();
+
+  // ---------- สำรองข้อมูล ----------
+  // อ่านอย่างเดียว ห้ามเขียนอะไรลง storage ในบล็อกนี้หรือตอนโหลดหน้าเด็ดขาด
+  // ถ้าข้อมูลชุดสุดท้ายยังเหลืออยู่ในเครื่อง การเขียนตอนโหลดจะทับมันหายถาวร
+  (function () {
+    var panel = document.getElementById("backupPanel");
+    var area = document.getElementById("backupText");
+    var say = document.getElementById("backupSay");
+    var btnOpen = document.getElementById("backup");
+    var btnCopy = document.getElementById("backupCopy");
+    var btnShare = document.getElementById("backupShare");
+    var btnClose = document.getElementById("backupClose");
+    if (!panel || !area || !btnOpen) return;
+
+    function note(msg) { if (say) say.textContent = msg; }
+    function fileName() { return "hybrid-backup-" + keyOf(new Date()) + ".json"; }
+
+    // เก็บทุกคีย์ของแอป ไม่ใช่แค่ตารางเทรน — ธีมกับปุ่มเสียงก็หายไปพร้อมกัน
+    function dump() {
+      var out = {};
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf("hybrid26.") === 0) out[k] = localStorage.getItem(k);
+        }
+      } catch (e) {}
+      return JSON.stringify({ app: "hybrid-athlete", v: VERSION, at: keyOf(new Date()), data: out });
+    }
+
+    // เลือกข้อความให้พร้อมก๊อป — พังตรงนี้ห้ามทำให้ทั้ง handler ตาย ไม่งั้นข้อความสำรองไม่ขึ้น
+    function selectAll() {
+      try {
+        area.focus();
+        if (area.setSelectionRange) area.setSelectionRange(0, area.value.length);
+        else if (area.select) area.select();
+      } catch (e) {}
+    }
+
+    btnOpen.addEventListener("click", function () {
+      area.value = dump();
+      panel.hidden = false;
+      note("");
+      selectAll();
+    });
+    if (btnClose) btnClose.addEventListener("click", function () { panel.hidden = true; });
+
+    if (btnCopy) {
+      btnCopy.addEventListener("click", function () {
+        selectAll();
+        var done = function () { note("คัดลอกแล้ว — เอาไปวางเก็บไว้เลย"); };
+        var fail = function () { note("ก๊อปเองได้เลย เลือกข้อความไว้ให้แล้ว"); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(area.value).then(done, function () {
+            var ok = false;
+            try { ok = document.execCommand("copy"); } catch (e) {}
+            if (ok) done(); else fail();
+          });
+        } else {
+          var ok = false;
+          try { ok = document.execCommand("copy"); } catch (e) {}
+          if (ok) done(); else fail();
+        }
+      });
+    }
+
+    // แชร์เป็นไฟล์ผ่าน share sheet ของ iOS — ลิงก์ download เชื่อถือไม่ได้บน Safari
+    if (btnShare) {
+      var canFile = false;
+      try {
+        canFile = !!(navigator.share && navigator.canShare &&
+          navigator.canShare({ files: [new File(["{}"], "t.json", { type: "application/json" })] }));
+      } catch (e) { canFile = false; }
+      if (canFile) {
+        btnShare.hidden = false;
+        btnShare.addEventListener("click", function () {
+          try {
+            var f = new File([area.value], fileName(), { type: "application/json" });
+            navigator.share({ files: [f], title: "Hybrid Athlete backup" }).then(
+              function () { note("ส่งออกเป็นไฟล์แล้ว"); },
+              function () { note("ยังไม่ได้เซฟ — ใช้ปุ่มคัดลอกแทนได้"); });
+          } catch (e) { note("แชร์ไม่ได้ — ใช้ปุ่มคัดลอกแทน"); }
+        });
+      }
+    }
   })();
 
   document.getElementById("reset").addEventListener("click", function () {
