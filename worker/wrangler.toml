@@ -8,6 +8,11 @@ VAPID_PUBLIC_KEY = "BBHcw9O25hLm2g7a8AAwpv9Pv91QtDwq5Bys12QVVaNxs2WOzx2sIXvWC1X7
 VAPID_SUBJECT = "mailto:robotipdgd4@gmail.com"
 ALLOW_ORIGIN = "https://peerasrisr.github.io"
 
+# เก็บล็อกไว้ย้อนดูได้ ไม่ต้องนั่งดักสดตอนผู้ใช้ทดสอบ
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 [[durable_objects.bindings]]
 name = "REST_ALARM"
 class_name = "RestAlarm"

@@ -745,7 +745,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "2.0.1";
+  var VERSION = "2.0.2";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1869,8 +1869,11 @@
     elPushTest.addEventListener("click", function () {
       pushSay("กำลังส่ง...");
       pushApi("/api/test", { sub: pushSub() }, false).then(function (r) {
-        pushSay(r && r.ok ? "ส่งแล้ว — สลับไปแอปอื่นแล้วรอดู" : "ส่งไม่สำเร็จ" + (r && r.status ? " (" + r.status + ")" : ""));
-      }, function () { pushSay("ต่อเซิร์ฟเวอร์ไม่ได้"); });
+        if (r && r.ok) { pushSay("ส่งถึง Apple แล้ว — ถ้าไม่เด้งคือติดที่ตั้งค่าในเครื่อง"); return; }
+        // เอาคำตอบดิบจาก Apple มาโชว์เลย จะได้ไม่ต้องไล่ถามกันทีละรอบ
+        pushSay("ส่งไม่สำเร็จ" + (r && r.status ? " status=" + r.status : "") +
+                (r && r.text ? " · " + String(r.text).slice(0, 120) : ""));
+      }, function () { pushSay("ต่อเซิร์ฟเวอร์ไม่ได้ — เน็ตหลุด หรือโดนบล็อก"); });
     });
   }
   (function () {
