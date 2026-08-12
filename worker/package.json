@@ -1,0 +1,9 @@
+{
+  "name": "hybrid-rest-push",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test-webpush.mjs",
+    "deploy": "wrangler deploy"
+  }
+}

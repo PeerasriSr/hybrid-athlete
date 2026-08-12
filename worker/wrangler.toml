@@ -1,0 +1,18 @@
+name = "hybrid-rest-push"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# กุญแจส่วนตัวไม่อยู่ในไฟล์นี้ — ใส่ด้วย: wrangler secret put VAPID_PRIVATE_JWK
+[vars]
+VAPID_PUBLIC_KEY = "BBHcw9O25hLm2g7a8AAwpv9Pv91QtDwq5Bys12QVVaNxs2WOzx2sIXvWC1X7ZuFALNMDNtgx2acunlWJjR9AJV4"
+VAPID_SUBJECT = "mailto:robotipdgd4@gmail.com"
+ALLOW_ORIGIN = "https://peerasrisr.github.io"
+
+[[durable_objects.bindings]]
+name = "REST_ALARM"
+class_name = "RestAlarm"
+
+# ต้องเป็น sqlite class ถึงจะใช้ได้บนแพลนฟรี
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RestAlarm"]

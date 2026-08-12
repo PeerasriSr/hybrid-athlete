@@ -12,6 +12,8 @@
 <meta name="apple-mobile-web-app-title" content="Hybrid">
 <meta name="description" content="ตารางเทรน Hybrid Athlete 8 สัปดาห์ ติ๊กเช็คได้ พร้อมวิธีทำแต่ละท่าและตัวจับเวลาพัก">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%8B%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Hybrid Athlete — 8 สัปดาห์</title>
 <style>
   html { -webkit-text-size-adjust: 100%; }
@@ -672,6 +674,7 @@
     </div>
     <span class="block" id="blockLabel">8 สัปดาห์ · 10 ส.ค. – 4 ต.ค.</span>
     <button class="sound-btn" id="soundBtn" type="button" aria-pressed="true"></button>
+    <button class="sound-btn" id="pushBtn" type="button" title="เตือนข้ามแอป">🔔</button>
   </div>
 
   <nav class="picker" aria-label="เลือกวัน">
@@ -698,6 +701,16 @@
       </span>
     </footer>
   </article>
+
+  <section class="backup" id="pushPanel" hidden aria-label="เตือนข้ามแอป">
+    <p id="pushWhy"></p>
+    <div class="row2">
+      <button class="reset" id="pushOn" type="button">เปิดเตือนข้ามแอป</button>
+      <button class="reset" id="pushTest" type="button" hidden>ทดสอบเสียง</button>
+      <button class="reset" id="pushOff" type="button" hidden>ปิด</button>
+      <span class="say" id="pushSay" role="status"></span>
+    </div>
+  </section>
 
   <section class="backup" id="backupPanel" hidden aria-label="สำรองข้อมูล">
     <p>ข้อมูลทั้งหมดอยู่ในเบราว์เซอร์เครื่องนี้ที่เดียว — Safari ล้างทิ้งเองได้ ก๊อปข้อความข้างล่างเก็บไว้ในโน้ต/แชท/เมล ไว้กู้คืนทีหลัง</p>
@@ -728,7 +741,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "1.7.0";
+  var VERSION = "1.8.0";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1636,6 +1649,7 @@
   function stopTimer() {
     stopAlarm();
     clearStale();
+    pushCancel();                              // เลิกพักกลางคัน อย่าให้แจ้งเตือนตามมาทีหลัง
     tRunning = false;
     clearInterval(tHandle); tHandle = null;
     cancelBeep();
@@ -1681,7 +1695,12 @@
   });
 
   document.addEventListener("visibilitychange", function () {
-    if (document.hidden) return;
+    // จองแจ้งเตือนตอนกำลังจะออกจากแอปเท่านั้น อยู่ในแอปใช้เสียงปลุกในเครื่องพอ จะได้ไม่เตือนซ้ำสองที่
+    if (document.hidden) {
+      if (tRunning && leftSec() > 0) pushSchedule(leftSec());
+      return;
+    }
+    pushCancel();
     clearFlash();
     if (staleAt) { showStale(staleAt); return; }   // อัปเดตว่าครบไปนานแค่ไหนแล้ว
     if (!tRunning) return;
@@ -1705,6 +1724,145 @@
     el.textContent = "v" + VERSION;
     el.title = "เวอร์ชัน " + VERSION + " · อัปเดต " + BUILD;
     el.setAttribute("aria-label", el.title);
+  })();
+
+  // ---------- เตือนข้ามแอป (Web Push) ----------
+  // ของเสริมล้วน ๆ — ถ้าพังหรือเน็ตหลุด ต้องเหลือเสียงปลุกในเครื่องแบบเดิมทุกอย่าง
+  // บน iOS ใช้ได้เฉพาะตอนเปิดจากไอคอนหน้าโฮมเท่านั้น ในแท็บ Safari ธรรมดาใช้ไม่ได้
+  var PUSH_API = "";                 // URL ของ Cloudflare Worker — เติมหลัง deploy
+  var VAPID_PUBLIC = "BBHcw9O25hLm2g7a8AAwpv9Pv91QtDwq5Bys12QVVaNxs2WOzx2sIXvWC1X7ZuFALNMDNtgx2acunlWJjR9AJV4";
+  var PKEY = "hybrid26.push";
+  var elPushPanel = document.getElementById("pushPanel");
+  var elPushWhy = document.getElementById("pushWhy");
+  var elPushSay = document.getElementById("pushSay");
+  var elPushOn = document.getElementById("pushOn");
+  var elPushOff = document.getElementById("pushOff");
+  var elPushTest = document.getElementById("pushTest");
+  var swReg = null;
+
+  function pushSay(m) { if (elPushSay) elPushSay.textContent = m || ""; }
+  function pushSupported() {
+    return !!(window.Notification && navigator.serviceWorker && window.PushManager);
+  }
+  function installedApp() {
+    if (navigator.standalone === true) return true;
+    try { return window.matchMedia("(display-mode: standalone)").matches; } catch (e) { return false; }
+  }
+  function pushSub() {                        // อ่านอย่างเดียว — ห้ามเขียนตอนโหลดหน้า
+    try { return JSON.parse(localStorage.getItem(PKEY) || "null"); } catch (e) { return null; }
+  }
+  function vapidBytes(s) {
+    var pad = s.replace(/-/g, "+").replace(/_/g, "/");
+    var raw = atob(pad + "===".slice((pad.length + 3) % 4));
+    var out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+
+  function paintPush() {
+    if (!elPushPanel) return;
+    var on = !!pushSub();
+    if (elPushOn) elPushOn.hidden = on;
+    if (elPushOff) elPushOff.hidden = !on;
+    if (elPushTest) elPushTest.hidden = !on;
+    if (!elPushWhy) return;
+    if (!PUSH_API) elPushWhy.textContent = "ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์แจ้งเตือน";
+    else if (!pushSupported()) elPushWhy.textContent = "เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือนแบบ push";
+    else if (!installedApp()) elPushWhy.textContent =
+      "ต้องเปิดจากไอคอนหน้าโฮมก่อน — กดปุ่มแชร์ใน Safari แล้วเลือก \"เพิ่มไปยังหน้าจอโฮม\" จากนั้นเปิดจากไอคอนนั้น (iOS ไม่ให้แท็บ Safari ธรรมดาใช้ push)";
+    else if (on) elPushWhy.textContent =
+      "เปิดอยู่ — พอสลับไปแอปอื่นระหว่างพัก เซิร์ฟเวอร์จะยิงแจ้งเตือนมาตอนหมดเวลาพอดี ต้องมีเน็ตด้วย";
+    else elPushWhy.textContent =
+      "เปิดแล้วจะเตือนได้ตอนสลับไปแอปอื่น โดยเสียงเพลงไม่หยุด (แต่ถ้าปิดสวิตช์เงียบไว้ iOS จะไม่ให้มีเสียง)";
+  }
+
+  function pushApi(path, body, useBeacon) {
+    if (!PUSH_API) return Promise.reject(new Error("ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์"));
+    var url = PUSH_API.replace(/\/$/, "") + path;
+    var text = JSON.stringify(body);
+    // ตอนสลับออกจากแอป fetch มักโดนฆ่ากลางทาง — sendBeacon ออกแบบมาสำหรับจังหวะนี้
+    // ใช้ text/plain เพื่อไม่ให้เกิด preflight ซึ่ง sendBeacon ทำไม่ได้
+    if (useBeacon && navigator.sendBeacon) {
+      try {
+        if (navigator.sendBeacon(url, new Blob([text], { type: "text/plain" }))) return Promise.resolve(null);
+      } catch (e) {}
+    }
+    return fetch(url, {
+      method: "POST", body: text, keepalive: true,
+      headers: { "Content-Type": "text/plain" },
+    }).then(function (r) { return r.json().catch(function () { return {}; }); });
+  }
+
+  function pushSchedule(sec) {
+    var s = pushSub();
+    if (!s || !(sec > 0)) return;
+    pushApi("/api/schedule", { sub: s, inSec: Math.ceil(sec) }, true).catch(function () {});
+  }
+  function pushCancel() {
+    var s = pushSub();
+    if (!s) return;
+    pushApi("/api/cancel", { sub: s }, false).catch(function () {});
+  }
+
+  function pushEnable() {
+    if (!PUSH_API) { pushSay("ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์"); return; }
+    if (!pushSupported()) { pushSay("เบราว์เซอร์นี้ไม่รองรับ"); return; }
+    if (!installedApp()) { pushSay("ต้องเปิดจากไอคอนหน้าโฮมก่อน"); return; }
+    pushSay("กำลังเปิด...");
+    Promise.resolve(Notification.requestPermission()).then(function (p) {
+      if (p !== "granted") throw new Error("ไม่ได้อนุญาตแจ้งเตือน — เปิดได้ที่ ตั้งค่า > การแจ้งเตือน");
+      return navigator.serviceWorker.register("sw.js");
+    }).then(function (reg) {
+      swReg = reg;
+      return navigator.serviceWorker.ready;
+    }).then(function (reg) {
+      return reg.pushManager.getSubscription().then(function (existing) {
+        return existing || reg.pushManager.subscribe({
+          userVisibleOnly: true, applicationServerKey: vapidBytes(VAPID_PUBLIC),
+        });
+      });
+    }).then(function (sub) {
+      // เขียนลง storage ตรงนี้ได้ เพราะมาจากการแตะปุ่ม ไม่ใช่ตอนโหลดหน้า
+      try { localStorage.setItem(PKEY, JSON.stringify(sub)); } catch (e) {}
+      paintPush();
+      pushSay("เปิดแล้ว — กดทดสอบเสียงดูได้เลย");
+    }).catch(function (e) {
+      pushSay((e && e.message) || "เปิดไม่สำเร็จ");
+    });
+  }
+
+  function pushDisable() {
+    var s = pushSub();
+    if (s) pushApi("/api/cancel", { sub: s }, false).catch(function () {});
+    try { localStorage.removeItem(PKEY); } catch (e) {}
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+      navigator.serviceWorker.getRegistration().then(function (reg) {
+        if (reg) reg.pushManager.getSubscription().then(function (sub) { if (sub) sub.unsubscribe(); });
+      }).catch(function () {});
+    }
+    paintPush();
+    pushSay("ปิดแล้ว");
+  }
+
+  if (elPushOn) elPushOn.addEventListener("click", pushEnable);
+  if (elPushOff) elPushOff.addEventListener("click", pushDisable);
+  if (elPushTest) {
+    elPushTest.addEventListener("click", function () {
+      pushSay("กำลังส่ง...");
+      pushApi("/api/test", { sub: pushSub() }, false).then(function (r) {
+        pushSay(r && r.ok ? "ส่งแล้ว — สลับไปแอปอื่นแล้วรอดู" : "ส่งไม่สำเร็จ" + (r && r.status ? " (" + r.status + ")" : ""));
+      }, function () { pushSay("ต่อเซิร์ฟเวอร์ไม่ได้"); });
+    });
+  }
+  (function () {
+    var btn = document.getElementById("pushBtn");
+    if (!btn || !elPushPanel) return;
+    btn.addEventListener("click", function () {
+      elPushPanel.hidden = !elPushPanel.hidden;
+      if (!elPushPanel.hidden) { paintPush(); pushSay(""); }
+    });
+    paintPush();
+    if (PUSH_API && pushSupported() && !pushSub()) elPushPanel.hidden = false;   // ยังไม่ได้เปิด = โชว์ให้เห็น
   })();
 
   // ---------- สำรองข้อมูล ----------
