@@ -677,6 +677,18 @@
     <button class="sound-btn" id="pushBtn" type="button" title="เตือนข้ามแอป">🔔</button>
   </div>
 
+  <!-- กรอบพวกนี้ต้องอยู่ต้นหน้า ไม่ใช่ท้ายหน้า — เดิมอยู่ใต้การ์ดยาว ๆ กดปุ่มแล้วมันเปิดอยู่นอกจอ ดูเหมือนไม่ทำงาน -->
+  <section class="backup" id="pushPanel" hidden aria-label="เตือนข้ามแอป">
+    <p id="pushWhy"></p>
+    <div class="row2">
+      <button class="reset" id="pushOn" type="button">เปิดเตือนข้ามแอป</button>
+      <button class="reset" id="pushTest" type="button" hidden>ทดสอบเสียง</button>
+      <button class="reset" id="pushOff" type="button" hidden>ปิด</button>
+      <span class="say" id="pushSay" role="status"></span>
+    </div>
+    <p class="say" id="pushDiag" style="margin:.5rem 0 0"></p>
+  </section>
+
   <nav class="picker" aria-label="เลือกวัน">
     <div class="weeks" id="weeks" role="group" aria-label="สัปดาห์"></div>
     <div class="days" id="days" role="group" aria-label="วันในสัปดาห์"></div>
@@ -701,16 +713,6 @@
       </span>
     </footer>
   </article>
-
-  <section class="backup" id="pushPanel" hidden aria-label="เตือนข้ามแอป">
-    <p id="pushWhy"></p>
-    <div class="row2">
-      <button class="reset" id="pushOn" type="button">เปิดเตือนข้ามแอป</button>
-      <button class="reset" id="pushTest" type="button" hidden>ทดสอบเสียง</button>
-      <button class="reset" id="pushOff" type="button" hidden>ปิด</button>
-      <span class="say" id="pushSay" role="status"></span>
-    </div>
-  </section>
 
   <section class="backup" id="backupPanel" hidden aria-label="สำรองข้อมูล">
     <p>ข้อมูลทั้งหมดอยู่ในเบราว์เซอร์เครื่องนี้ที่เดียว — Safari ล้างทิ้งเองได้ ก๊อปข้อความข้างล่างเก็บไว้ในโน้ต/แชท/เมล<br>
@@ -743,7 +745,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "2.0.0";
+  var VERSION = "2.0.1";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1761,8 +1763,23 @@
     return out;
   }
 
+  // บอกสถานะดิบ ๆ ไว้เลย เวลาเปิดไม่ได้จะได้รู้ทันทีว่าติดตรงไหน ไม่ต้องเดา
+  function paintDiag() {
+    var el = document.getElementById("pushDiag");
+    if (!el) return;
+    var perm = "-";
+    try { perm = window.Notification ? Notification.permission : "ไม่มี"; } catch (e) {}
+    el.textContent =
+      "เปิดจากไอคอนหน้าโฮม: " + (installedApp() ? "ใช่" : "ไม่ใช่") +
+      " · รองรับ push: " + (pushSupported() ? "ใช่" : "ไม่") +
+      " · สิทธิ์แจ้งเตือน: " + perm +
+      " · เซิร์ฟเวอร์: " + (PUSH_API ? "ตั้งแล้ว" : "ยังไม่ตั้ง") +
+      " · เปิดใช้แล้ว: " + (pushSub() ? "ใช่" : "ไม่");
+  }
+
   function paintPush() {
     if (!elPushPanel) return;
+    paintDiag();
     var on = !!pushSub();
     if (elPushOn) elPushOn.hidden = on;
     if (elPushOff) elPushOff.hidden = !on;
@@ -1861,7 +1878,10 @@
     if (!btn || !elPushPanel) return;
     btn.addEventListener("click", function () {
       elPushPanel.hidden = !elPushPanel.hidden;
-      if (!elPushPanel.hidden) { paintPush(); pushSay(""); }
+      if (elPushPanel.hidden) return;
+      paintPush();
+      pushSay("");
+      try { elPushPanel.scrollIntoView({ block: "center" }); } catch (e) {}
     });
     paintPush();
     if (PUSH_API && pushSupported() && !pushSub()) elPushPanel.hidden = false;   // ยังไม่ได้เปิด = โชว์ให้เห็น
@@ -1908,6 +1928,7 @@
       area.value = dump();
       panel.hidden = false;
       note("");
+      try { panel.scrollIntoView({ block: "center" }); } catch (e) {}
       selectAll();
     });
     if (btnClose) btnClose.addEventListener("click", function () { panel.hidden = true; });
