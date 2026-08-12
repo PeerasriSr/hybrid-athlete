@@ -43,6 +43,8 @@ export class RestAlarm {
       const r = await sendPush(data.sub, JSON.stringify({
         title: "ทดสอบเสียงเตือน", body: "ถ้าได้ยินเสียงนี้ตอนอยู่แอปอื่น แปลว่าใช้ได้แล้ว",
       }), this.env);
+      console.log("TEST ยิง push: ok=" + r.ok + " status=" + r.status +
+                  (r.text ? " ตอบกลับ=" + String(r.text).slice(0, 300) : ""));
       return json(this.env, r, r.ok ? 200 : 502);
     }
     if (act === "schedule") {
@@ -51,6 +53,7 @@ export class RestAlarm {
       // ยึดนาฬิกาเซิร์ฟเวอร์ ไม่ใช่เวลาที่เครื่องส่งมา เผื่อนาฬิกาสองฝั่งไม่ตรงกัน
       await this.state.storage.put({ sub: data.sub, tries: 0 });
       await this.state.storage.setAlarm(Date.now() + sec * 1000);
+      console.log("SCHEDULE จองไว้อีก " + sec + " วินาที");
       return json(this.env, { ok: true, at: Date.now() + sec * 1000 });
     }
     return json(this.env, { error: "not found" }, 404);
@@ -64,6 +67,10 @@ export class RestAlarm {
     const r = await sendPush(sub, JSON.stringify({
       title: "พักครบแล้ว", body: "กลับไปเซตต่อไปได้เลย",
     }), this.env);
+
+    // ตัว alarm ไม่ใช่ HTTP request เลยไม่โผล่ในล็อกเอง ต้อง log เองถึงจะไล่ปัญหาได้
+    console.log("ALARM ยิง push: ok=" + r.ok + " status=" + r.status +
+                " รอบที่=" + (tries + 1) + (r.text ? " ตอบกลับ=" + String(r.text).slice(0, 300) : ""));
 
     if (r.ok) return;
     if (r.status === 404 || r.status === 410) {    // subscription ตายแล้ว ลองอีกก็เท่านั้น
