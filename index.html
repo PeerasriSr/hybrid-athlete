@@ -745,7 +745,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "2.1.0";
+  var VERSION = "2.1.1";
   var BUILD = "2026-08-12";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -1538,11 +1538,15 @@
   }
 
   function notify() {
-    try {
-      if (window.Notification && Notification.permission === "granted") {
-        new Notification("พักครบแล้ว", { body: "กลับไปเซตต่อไปได้เลย", tag: "hybrid-rest" });
-      }
-    } catch (e) {}
+    // เปิด push ไว้ = เซิร์ฟเวอร์เด้งแจ้งเตือนให้แล้วตอนหมดเวลา ยิงซ้ำตรงนี้จะได้สองอัน
+    // ไม่ได้เปิด และกำลังมองหน้าจออยู่ = ปุ่มกะพริบกับเสียงก็พอ ไม่ต้องมีแบนเนอร์อีก
+    if (!pushSub() && document.hidden) {
+      try {
+        if (window.Notification && Notification.permission === "granted") {
+          new Notification("พักครบแล้ว", { body: "กลับไปเซตต่อไปได้เลย", tag: "hybrid-rest" });
+        }
+      } catch (e) {}
+    }
     if (document.hidden) {
       titleFlash = true;
       document.title = "⏰ พักครบแล้ว — " + baseTitle;
