@@ -745,7 +745,7 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "2.4.0";
+  var VERSION = "2.6.0";
   var BUILD = "2026-09-21";
 
   var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
@@ -873,20 +873,31 @@
           "จะรู้สึกแสบตึงหน้าแข้ง — นั่นคือถูกแล้ว ท่านี้กันหน้าแข้งอักเสบตอนเพิ่มระยะวิ่ง"] }
   ]);
 
-  // เดิมวันพฤหัสคือ Upper B — ตอนนี้พฤหัสเป็นวันพัก
-  // เก็บมาแค่สองท่าที่ Upper A ไม่มี: อกบน กับ แขนโดยตรง
-  // ที่เหลือของ Upper B (chin-up / seated OHP / chest-supported row / lateral raise)
-  // ซ้ำแพทเทิร์นที่ Upper A ทำหนักกว่าอยู่แล้ว ตัดทิ้งไม่เสียอะไร
-  var UPPER_ADDON = lift([
-    { n: "Incline DB Press", s: "3 × 10-12 · RPE 8-9", r: 90, q: "incline dumbbell press form 30 degrees",
+  var UPPER_B = lift([
+    { n: "Incline DB Press", s: "4 × 10-12 · RPE 8-9", r: 90, q: "incline dumbbell press form 30 degrees",
       c: ["ปรับเบาะประมาณ 30° ชันกว่านี้ไหล่หน้าจะทำงานแทนอก",
           "ลงจนรู้สึกตึงอกส่วนบน ศอกไม่กางเกิน 45°",
-          "ต่อจาก DB Bench มาแล้ว เน้นความรู้สึกกล้ามเนื้อ ไม่ต้องไล่น้ำหนัก"] },
+          "วันนี้เน้นความรู้สึกกล้ามเนื้อ ไม่ต้องไล่น้ำหนัก"] },
+    { n: "Chin-up / Lat Pulldown", s: "4 × 8-12 · RPE 8-9", r: 90, q: "chin up vs pull up form",
+      c: ["Chin-up = หงายมือ กว้างเท่าไหล่ ได้ปีก+ไบเซ็ปมากกว่า Pull-up",
+          "ดึงอกเข้าหาบาร์ ศอกลงตรง",
+          "เกร็งท้อง อย่าแกว่งขา"] },
+    { n: "Seated DB OHP / Arnold Press", s: "3 × 10-12 · RPE 9", r: 75, q: "arnold press form",
+      c: ["นั่งพิงพนักตั้งชัน หลังแนบตลอด",
+          "Arnold = เริ่มหงายมือหน้าอก แล้วหมุนออกขณะดันขึ้น",
+          "ลงช้ากว่าดันขึ้นเสมอ"] },
+    { n: "Chest-supported Row", s: "3 × 12-15 · RPE 9", r: 75, q: "chest supported dumbbell row form",
+      c: ["อกแนบเบาะตลอด ห้ามยกตัวออกช่วย",
+          "ดึงศอกไปข้างหลัง บีบสะบักค้าง 1 วิ",
+          "ท่านี้ตัดการโกงออกหมด ใช้น้ำหนักน้อยกว่าที่คิดได้เลย"] },
     { n: "Barbell Curl + Reverse Curl", s: "3 × 10-12 / 3 × 12-15 · ซูเปอร์เซ็ต", r: 60, q: "barbell curl and reverse curl form",
       c: ["ศอกล็อกไว้ข้างลำตัว ห้ามแกว่งลำตัวส่ง",
           "Reverse Curl = คว่ำมือ เน้นแขนท่อนปลาย น้ำหนักจะเบากว่าปกติมาก",
-          "ทำติดกันไม่พัก แล้วค่อยพัก 60 วิ",
-          "นี่คือท่าแขนท่าเดียวที่เหลือทั้งสัปดาห์ อย่าข้าม"] }
+          "ทำติดกันไม่พัก แล้วค่อยพัก 60 วิ"] },
+    { n: "Lateral Raise", s: "3 × 15-20 · RPE 10", r: 45, q: "dumbbell lateral raise form",
+      c: ["นำด้วยศอก ยกแค่ระดับไหล่",
+          "เซตสุดท้ายทำจนเกือบหมดแรงได้ ท่านี้ปลอดภัย",
+          "ลงช้า อย่าเหวี่ยง"] }
   ]);
 
   var LEG_SUPPORT = [
@@ -914,9 +925,9 @@
     var r = RUN[week - 1], ivl = r[0], tempo = r[1], longKm = r[2], ivlRest = r[3];
 
     if (dayIdx === 0) return {
-      kind: "lift", title: "Upper A — Strength", sub: "ดัน/ดึงหนัก + อกบน/แขน · ประมาณ 85 นาที",
+      kind: "lift", title: "Upper A — Strength", sub: "ดัน/ดึงหนัก · ประมาณ 70 นาที",
       note: PROGRESS_NOTE,
-      groups: [["", UPPER_A], ["ADD-ON · อกบน + แขน (ยกมาจาก Upper B) · ~12 นาที", UPPER_ADDON]]
+      groups: [["", UPPER_A]]
     };
 
     if (dayIdx === 1) return {
@@ -943,33 +954,12 @@
     };
 
     if (dayIdx === 2) return {
-      kind: "lift", title: "Lower A — Strength", sub: "สควอท/สะโพก + core · ประมาณ 80 นาที",
+      kind: "lift", title: "Lower A — Strength", sub: "สควอท/สะโพก · ประมาณ 70 นาที",
       note: PROGRESS_NOTE,
-      groups: [["", LOWER_A], CORE.B]
+      groups: [["", LOWER_A]]
     };
 
     if (dayIdx === 3) return {
-      kind: "rest", title: "Rest + Mobility", sub: "พักกลางสัปดาห์ — คั่นวันขาหนักกับวันเทมโป",
-      note: "วันพักไม่ใช่วันเสียเปล่า — ขาต้องสดพอจะคุม pace วันพรุ่งนี้ได้",
-      groups: [["", [
-        { n: "เดินเบา", s: "20-30 นาที",
-          c: ["เลือดไหลเวียนช่วยฟื้นตัวเร็วกว่านอนเฉยๆ",
-              "ไม่ต้องเร็ว ไม่ต้องจับเวลา และห้ามแปลงเป็นจ็อกเอง"] },
-        { n: "โฟมโรลหน้าขา + หลังต้นขา", s: "2 นาที ต่อข้าง", q: "foam roll quads hamstrings after leg day",
-          c: ["เมื่อวานสควอท/RDL หนัก วันนี้คลายก่อนจะไปเทมโปพรุ่งนี้",
-              "เจอจุดตึงให้ค้างไว้ 20-30 วิ อย่าไถผ่านเร็วๆ"] },
-        { n: "ยืดสะโพกหน้า (hip flexor)", s: "2 × 45 วิ ต่อข้าง", q: "couch stretch hip flexor runners",
-          c: ["ท่าคุกเข่าข้างเดียว เก็บก้นเข้า แล้วดันสะโพกไปหน้า",
-              "สะโพกหน้าตึง = ก้นไม่ทำงานตอนวิ่งเทมโป หลังล่างรับแทน"] },
-        { n: "ยืดน่อง + เอ็นร้อยหวาย", s: "2 × 45 วิ ต่อข้าง", q: "calf and achilles stretch for runners",
-          c: ["ยืดสองแบบ: เข่าเหยียด (น่องมัดบน) และเข่างอ (น่องมัดล่าง/เอ็นร้อยหวาย)",
-              "เมื่อวาน calf raise หนัก ปล่อยน่องตึงค้าง = เสี่ยงเอ็นร้อยหวายอักเสบ"] },
-        { n: "ข้อเท้า (ankle dorsiflexion)", s: "2 × 15 ครั้ง ต่อข้าง", q: "ankle dorsiflexion mobility knee to wall",
-          c: ["คุกเข่าหน้าผนัง ดันเข่าไปแตะผนังโดยส้นเท้าไม่ยก"] }
-      ]]]
-    };
-
-    if (dayIdx === 4) return {
       kind: "run", title: "Tempo " + tempo + " นาที + Leg Support", sub: "Threshold · ประมาณ 60 นาที",
       note: "Tempo = เหนื่อยแต่คุมได้ พูดได้ทีละ 3-4 คำ ≈ เร็วกว่า easy 40-55 วิ/กม.",
       groups: [
@@ -983,11 +973,11 @@
                 "นาทีสุดท้ายควรยังคุมจังหวะได้ ไม่ใช่ทรุด"] },
           { n: "Cool-down", s: "8 นาที", d: "จ็อกเบา" }
         ]],
-        ["LEG SUPPORT · 20 นาที (เบา อย่าให้ล้าถึงวันเสาร์)", LEG_SUPPORT]
+        ["LEG SUPPORT · 20 นาที (เบา อย่าให้ล้าถึงวันศุกร์)", LEG_SUPPORT]
       ]
     };
 
-    if (dayIdx === 5) {
+    if (dayIdx === 4) {
       if (longKm === null) return {
         kind: "run", title: "5K Time Trial", sub: "วันวัดผล — จบบล็อก 8 สัปดาห์",
         note: "จดเวลาไว้เทียบกับตอนก่อนเริ่มโปรแกรม แล้วใช้ตั้ง pace ของบล็อกหน้า",
@@ -1014,6 +1004,12 @@
         ]
       };
     }
+
+    if (dayIdx === 5) return {
+      kind: "lift", title: "Upper B — Hypertrophy", sub: "สร้างกล้าม + แขน · ประมาณ 65 นาที",
+      note: "วันนี้เน้นจำนวนครั้งและความรู้สึกกล้ามเนื้อ ไม่ต้องไล่ล่าน้ำหนัก",
+      groups: [["", UPPER_B], CORE.B]
+    };
 
     return {
       kind: "rest", title: "Rest + Mobility", sub: "วันพักจริง — นี่คือวันที่ร่างกายสร้างของ",
@@ -1071,8 +1067,8 @@
   })();
 
   function kindOf(dayIdx) {
-    if (dayIdx === 1 || dayIdx === 4 || dayIdx === 5) return "run";
-    if (dayIdx === 3 || dayIdx === 6) return "rest";
+    if (dayIdx === 1 || dayIdx === 3 || dayIdx === 4) return "run";
+    if (dayIdx === 6) return "rest";
     return "lift";
   }
 
