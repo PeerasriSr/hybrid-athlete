@@ -194,6 +194,27 @@
     gap: .625rem;
   }
 
+  .blocks {
+    display: flex;
+    gap: .25rem;
+  }
+  .blocks button {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: .6875rem;
+    letter-spacing: .04em;
+    padding: .375rem 0;
+    border: 1px solid var(--line);
+    border-radius: .375rem;
+    background: transparent;
+    color: var(--faint);
+    cursor: pointer;
+  }
+  .blocks button[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
   .weeks {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
@@ -672,7 +693,7 @@
       <h1>Hybrid Athlete</h1>
       <span class="ver" id="ver"></span>
     </div>
-    <span class="block" id="blockLabel">8 สัปดาห์ · 10 ส.ค. – 4 ต.ค.</span>
+    <span class="block" id="blockLabel">8 สัปดาห์ · 19 ต.ค. – 13 ธ.ค.</span>
     <button class="sound-btn" id="soundBtn" type="button" aria-pressed="true"></button>
     <button class="sound-btn" id="pushBtn" type="button" title="เตือนข้ามแอป">🔔</button>
   </div>
@@ -690,6 +711,7 @@
   </section>
 
   <nav class="picker" aria-label="เลือกวัน">
+    <div class="blocks" id="blocks" role="group" aria-label="บล็อก"></div>
     <div class="weeks" id="weeks" role="group" aria-label="สัปดาห์"></div>
     <div class="days" id="days" role="group" aria-label="วันในสัปดาห์"></div>
   </nav>
@@ -745,24 +767,37 @@
   "use strict";
 
   // อัปเดตสองบรรทัดนี้ทุกครั้งที่แก้ไฟล์ — ใช้เช็คว่ามือถือโหลดไฟล์ใหม่แล้วจริงไหม
-  var VERSION = "2.8.0";
-  var BUILD = "2026-09-21";
+  var VERSION = "2.9.0";
+  var BUILD = "2026-10-19";
 
-  var START = new Date(2026, 7, 10);      // จันทร์ 10 ส.ค. 2026
   var DELOAD = { 4: true, 8: true };
   var KEY = "hybrid26.v1";
 
   // interval / tempo(นาที) / long run(กม.) / เวลาพักระหว่างเที่ยว(วินาที) ต่อสัปดาห์
-  var RUN = [
-    ["5 × 400 ม. (จ็อกพัก 90 วิ)", 15, 8, 90],
-    ["6 × 400 ม. (จ็อกพัก 90 วิ)", 18, 9, 90],
-    ["5 × 800 ม. (จ็อกพัก 2 นาที)", 22, 10, 120],
-    ["4 × 400 ม. (จ็อกพัก 2 นาที)", 12, 7, 120],
-    ["6 × 800 ม. (จ็อกพัก 2 นาที)", 22, 11, 120],
-    ["8 × 400 ม. (จ็อกพัก 90 วิ)", 25, 12, 90],
-    ["5 × 1000 ม. (จ็อกพัก 2:30)", 28, 13, 150],
-    ["4 × 400 ม. (จ็อกพัก 2 นาที)", 12, null, 120]
+  // บล็อกละ 8 สัปดาห์ · จบบล็อกแล้วเพิ่มอันใหม่ต่อท้าย — ของเก่าอย่าลบ ยังกดดูย้อนหลังได้
+  var BLOCKS = [
+    { n: 1, start: new Date(2026, 7, 10), run: [      // จันทร์ 10 ส.ค. 2026
+      ["5 × 400 ม. (จ็อกพัก 90 วิ)", 15, 8, 90],
+      ["6 × 400 ม. (จ็อกพัก 90 วิ)", 18, 9, 90],
+      ["5 × 800 ม. (จ็อกพัก 2 นาที)", 22, 10, 120],
+      ["4 × 400 ม. (จ็อกพัก 2 นาที)", 12, 7, 120],
+      ["6 × 800 ม. (จ็อกพัก 2 นาที)", 22, 11, 120],
+      ["8 × 400 ม. (จ็อกพัก 90 วิ)", 25, 12, 90],
+      ["5 × 1000 ม. (จ็อกพัก 2:30)", 28, 13, 150],
+      ["4 × 400 ม. (จ็อกพัก 2 นาที)", 12, null, 120]
+    ] },
+    { n: 2, start: new Date(2026, 9, 19), run: [      // จันทร์ 19 ต.ค. 2026
+      ["5 × 800 ม. (จ็อกพัก 2 นาที)", 20, 11, 120],
+      ["6 × 800 ม. (จ็อกพัก 2 นาที)", 24, 12, 120],
+      ["4 × 1000 ม. (จ็อกพัก 2:30)", 28, 13, 150],
+      ["4 × 400 ม. (จ็อกพัก 2 นาที)", 14, 9, 120],
+      ["5 × 1000 ม. (จ็อกพัก 2:30)", 30, 14, 150],
+      ["10 × 400 ม. (จ็อกพัก 75 วิ)", 32, 15, 75],
+      ["4 × 1200 ม. (จ็อกพัก 3 นาที)", 35, 16, 180],
+      ["4 × 400 ม. (จ็อกพัก 2 นาที)", 14, null, 120]
+    ] }
   ];
+  var BLK = BLOCKS[BLOCKS.length - 1];
 
   var CORE = {
     A: ["CORE A · ANTI-EXTENSION", [
@@ -922,7 +957,7 @@
   var PROGRESS_NOTE = "ทำครบ rep บนสุดของทุกเซตแล้วยัง RPE ≤ 8 → ครั้งหน้าเพิ่มน้ำหนัก 2.5-5%";
 
   function session(week, dayIdx) {
-    var r = RUN[week - 1], ivl = r[0], tempo = r[1], longKm = r[2], ivlRest = r[3];
+    var r = BLK.run[week - 1], ivl = r[0], tempo = r[1], longKm = r[2], ivlRest = r[3];
 
     if (dayIdx === 0) return {
       kind: "run", title: "Interval + Core A", sub: "VO2max · ประมาณ 55 นาที",
@@ -960,7 +995,8 @@
     };
 
     if (dayIdx === 3) return {
-      kind: "run", title: "Tempo " + tempo + " นาที + Leg Support", sub: "Threshold · ประมาณ 60 นาที",
+      kind: "run", title: "Tempo " + tempo + " นาที + Leg Support",
+      sub: "Threshold · ประมาณ " + (Math.round((tempo + 38) / 5) * 5) + " นาที",
       note: "Tempo = เหนื่อยแต่คุมได้ พูดได้ทีละ 3-4 คำ ≈ เร็วกว่า easy 40-55 วิ/กม.",
       groups: [
         ["", [
@@ -979,8 +1015,8 @@
 
     if (dayIdx === 4) {
       if (longKm === null) return {
-        kind: "run", title: "5K Time Trial", sub: "วันวัดผล — จบบล็อก 8 สัปดาห์",
-        note: "จดเวลาไว้เทียบกับตอนก่อนเริ่มโปรแกรม แล้วใช้ตั้ง pace ของบล็อกหน้า",
+        kind: "run", title: "5K Time Trial", sub: "วันวัดผล — จบบล็อก " + BLK.n,
+        note: "จดเวลาไว้เทียบกับ TT ของบล็อกก่อน (กดปุ่มบล็อกข้างบนเพื่อดูย้อน) แล้วใช้ตั้ง pace ของบล็อกหน้า",
         groups: [["", [
           { n: "Warm-up", s: "15 นาที + strides 4 × 20 วิ" },
           { n: "5 กม. เต็มที่ — จับเวลา", s: "5.0 กม.", d: "ออกอย่าเร็วเกิน 2 กม. แรกคุมไว้ก่อน", log: true },
@@ -1050,7 +1086,7 @@
                 "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
   function dateOf(week, dayIdx) {
-    var d = new Date(START.getTime());
+    var d = new Date(BLK.start.getTime());
     d.setDate(d.getDate() + (week - 1) * 7 + dayIdx);
     return d;
   }
@@ -1062,8 +1098,17 @@
   var today = new Date();
   var cur = { week: 1, day: 0 };
   (function locate() {
-    var diff = Math.floor((new Date(today.getFullYear(), today.getMonth(), today.getDate()) - START) / 86400000);
-    if (diff >= 0 && diff < 56) { cur.week = Math.floor(diff / 7) + 1; cur.day = diff % 7; }
+    var t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    // วันนี้อยู่บล็อกไหน ก็เปิดบล็อกนั้น · ถ้าอยู่ระหว่างบล็อก ให้ค้างที่บล็อกล่าสุด
+    for (var i = 0; i < BLOCKS.length; i++) {
+      var diff = Math.floor((t - BLOCKS[i].start) / 86400000);
+      if (diff >= 0 && diff < 56) {
+        BLK = BLOCKS[i];
+        cur.week = Math.floor(diff / 7) + 1;
+        cur.day = diff % 7;
+        return;
+      }
+    }
   })();
 
   function kindOf(dayIdx) {
@@ -1073,9 +1118,39 @@
   }
 
   // ---------- render ----------
+  var elBlocks = document.getElementById("blocks");
   var elWeeks = document.getElementById("weeks");
   var elDays = document.getElementById("days");
   var elContent = document.getElementById("content");
+
+  function buildBlocks() {
+    if (BLOCKS.length < 2) { elBlocks.hidden = true; return; }
+    elBlocks.innerHTML = "";
+    for (var i = 0; i < BLOCKS.length; i++) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = "บล็อก " + BLOCKS[i].n;
+      b.setAttribute("aria-pressed", BLOCKS[i] === BLK ? "true" : "false");
+      (function (blk) {
+        b.addEventListener("click", function () {
+          if (blk === BLK) return;
+          BLK = blk;
+          // ถ้าวันนี้อยู่ในบล็อกที่กด ก็เด้งไปวันนี้ ไม่ใช่ย้อนไป W1
+          var diff = Math.floor((new Date(today.getFullYear(), today.getMonth(), today.getDate()) - blk.start) / 86400000);
+          if (diff >= 0 && diff < 56) { cur.week = Math.floor(diff / 7) + 1; cur.day = diff % 7; }
+          else { cur.week = 1; cur.day = 0; }
+          render();
+        });
+      })(BLOCKS[i]);
+      elBlocks.appendChild(b);
+    }
+  }
+
+  function blockLabel() {
+    var a = dateOf(1, 0), z = dateOf(8, 6);
+    return "8 สัปดาห์ · " + a.getDate() + " " + MONTHS[a.getMonth()] +
+           " – " + z.getDate() + " " + MONTHS[z.getMonth()];
+  }
 
   function countOf(week, dayIdx) {
     var s = session(week, dayIdx), total = 0;
@@ -1124,7 +1199,7 @@
     document.getElementById("progressText").textContent = c.done + " / " + c.total + " เสร็จ";
     document.getElementById("bar").style.width = (c.total ? c.done / c.total * 100 : 0) + "%";
     document.getElementById("weekText").textContent =
-      "W" + cur.week + (DELOAD[cur.week] ? " · DELOAD" : "");
+      "B" + BLK.n + " · W" + cur.week + (DELOAD[cur.week] ? " · DELOAD" : "");
   }
 
   function render() {
@@ -1133,8 +1208,10 @@
     var k = keyOf(d);
     var r = rec(k);
 
+    buildBlocks();
     buildWeeks();
     buildDays();
+    document.getElementById("blockLabel").textContent = blockLabel();
 
     var chip = document.getElementById("chip");
     chip.setAttribute("data-kind", s.kind);
